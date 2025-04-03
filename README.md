@@ -1,50 +1,132 @@
-# Welcome to your Expo app 👋
+# Wordle Clone
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native mobile game inspired by the popular word-guessing game Wordle. Built with Expo and React Native, this app features multiple difficulty levels, a timer system, and persistent statistics tracking.
 
-## Get started
+![Wordle Clone Screenshot](assets/images/screenshot.png)
 
-1. Install dependencies
+## Features
 
+- 🎮 Three difficulty levels (Easy, Medium, Hard)
+- ⏱️ Timer-based gameplay
+- 💡 Helpful word hints
+- 📊 Statistics tracking and persistence
+- 🎨 Interactive keyboard with color feedback
+- 🔄 Play again functionality
+- 📱 Cross-platform support (Android & iOS)
+
+## Live Demo
+
+Download the Android APK from our [latest release](https://github.com/zoecabrales/WordleClone/releases/latest).
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or newer)
+- npm or yarn
+- Expo CLI
+- Android Studio (for Android development)
+- Xcode (for iOS development, Mac only)
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/zoecabrales/WordleClone.git
+   cd WordleClone
+   ```
+
+2. Install dependencies:
    ```bash
    npm install
    ```
 
-2. Start the app
-
+3. Start the development server:
    ```bash
-    npx expo start
+   npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+4. Run on your preferred platform:
+   - Press 'a' for Android
+   - Press 'i' for iOS (requires Mac)
+   - Scan QR code with Expo Go app on your device
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Game Rules
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+1. Guess the word within the time limit
+2. Each guess must be a valid word
+3. Colors indicate:
+   - 🟩 Green: Letter is correct and in right position
+   - 🟨 Yellow: Letter is in the word but wrong position
+   - ⬜ Gray: Letter is not in the word
 
-## Get a fresh project
+## Difficulty Levels
 
-When you're ready, run:
+- **Easy**: 5 minutes, shorter words
+- **Medium**: 3 minutes, medium-length words
+- **Hard**: 1 minute, longer/complex words
 
-```bash
-npm run reset-project
+## Contributing
+
+We welcome contributions! Here's how you can help:
+
+1. Fork the repository
+2. Create your feature branch:
+   ```bash
+   git checkout -b feature/AmazingFeature
+   ```
+3. Commit your changes:
+   ```bash
+   git commit -m 'Add some AmazingFeature'
+   ```
+4. Push to the branch:
+   ```bash
+   git push origin feature/AmazingFeature
+   ```
+5. Open a Pull Request
+
+## Tech Stack
+
+- React Native
+- Expo
+- TypeScript
+- AsyncStorage for data persistence
+- React Navigation
+- Expo Router
+
+## Project Structure
+
+```
+wordleClone/
+├── app/                    # Main application code
+│   ├── components/         # Reusable components
+│   ├── constants/         # Constants and configurations
+│   ├── hooks/            # Custom React hooks
+│   └── services/         # API and other services
+├── assets/               # Images and other static assets
+└── types/               # TypeScript type definitions
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Future Enhancements
 
-## Learn more
+- [ ] Online multiplayer mode
+- [ ] Daily challenges
+- [ ] Social sharing features
+- [ ] Custom word lists
+- [ ] Theme customization
 
-To learn more about developing your project with Expo, look at the following resources:
+## License
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Join the community
+## Acknowledgments
 
-Join our community of developers creating universal apps.
+- Inspired by the original [Wordle](https://www.nytimes.com/games/wordle/index.html) game
+- Built with [Expo](https://expo.dev/)
+- Word definitions from [Free Dictionary API](https://dictionaryapi.dev/)
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Contact
+
+Jireh Zoe Cabral - [@zoecabrales](https://github.com/zoecabrales)
+
+Project Link: [https://github.com/zoecabrales/WordleClone](https://github.com/zoecabrales/WordleClone)
