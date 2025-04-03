@@ -1,4 +1,4 @@
-import { View, StyleSheet, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, StyleSheet, Text, TouchableOpacity, ActivityIndicator, Dimensions, useWindowDimensions, ScrollView } from "react-native";
 import { GameBoard } from "./components/GameBoard";
 import { Keyboard } from "./components/Keyboard";
 import { GameStatus } from "./components/GameStatus";
@@ -17,6 +17,9 @@ const DEFAULT_STATS: GameStats = {
 };
 
 export default function Index() {
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isTablet = windowWidth >= 768;
+  const isSmallScreen = windowHeight < 700; // For devices like iPhone SE
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [gameHistory, setGameHistory] = useState<GameStats>(DEFAULT_STATS);
@@ -109,50 +112,100 @@ export default function Index() {
   }
 
   if (!isGameStarted) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Select Difficulty</Text>
-        <View style={styles.difficultyContainer}>
-          {(Object.keys(DIFFICULTY_SETTINGS) as Difficulty[]).map((level) => (
-            <TouchableOpacity
-              key={level}
-              style={styles.difficultyButton}
-              onPress={() => startNewGame(level)}
-            >
-              <View style={styles.difficultyContent}>
-                <View style={styles.difficultyHeader}>
-                  <Text style={styles.difficultyText}>
-                    {DIFFICULTY_SETTINGS[level].label}
-                    {'\n'}
-                    ({DIFFICULTY_SETTINGS[level].time / 60} minutes)
+    const DifficultyContent = () => (
+      <View style={[
+        styles.difficultyContainer,
+        isTablet && styles.difficultyContainerTablet,
+        isSmallScreen && styles.difficultyContainerSmall
+      ]}>
+        {(Object.keys(DIFFICULTY_SETTINGS) as Difficulty[]).map((level) => (
+          <TouchableOpacity
+            key={level}
+            style={[
+              styles.difficultyButton,
+              isTablet && styles.difficultyButtonTablet,
+              isSmallScreen && styles.difficultyButtonSmall
+            ]}
+            onPress={() => startNewGame(level)}
+          >
+            <View style={[
+              styles.difficultyContent,
+              isSmallScreen && styles.difficultyContentSmall
+            ]}>
+              <View style={[
+                styles.difficultyHeader,
+                isSmallScreen && styles.difficultyHeaderSmall
+              ]}>
+                <Text style={[
+                  styles.difficultyText,
+                  isTablet && styles.difficultyTextTablet,
+                  isSmallScreen && styles.difficultyTextSmall
+                ]}>
+                  {DIFFICULTY_SETTINGS[level].label}
+                  {'\n'}
+                  ({DIFFICULTY_SETTINGS[level].time / 60} {DIFFICULTY_SETTINGS[level].time === 60 ? 'minute' : 'minutes'})
+                </Text>
+              </View>
+              <View style={[
+                styles.statsContainer,
+                isTablet && styles.statsContainerTablet,
+                isSmallScreen && styles.statsContainerSmall
+              ]}>
+                <View style={[
+                  styles.statRow,
+                  isTablet && styles.statRowTablet,
+                  isSmallScreen && styles.statRowSmall
+                ]}>
+                  <Text style={[
+                    styles.statLabel,
+                    isTablet && styles.statLabelTablet,
+                    isSmallScreen && styles.statLabelSmall
+                  ]}>Games:</Text>
+                  <Text style={[
+                    styles.statValue,
+                    isTablet && styles.statValueTablet,
+                    isSmallScreen && styles.statValueSmall
+                  ]}>{gameHistory[level].gamesPlayed}</Text>
+                </View>
+                <View style={[styles.statRow, isTablet && styles.statRowTablet]}>
+                  <Text style={[styles.statLabel, isTablet && styles.statLabelTablet]}>Wins:</Text>
+                  <Text style={[styles.statValue, isTablet && styles.statValueTablet]}>
+                    {gameHistory[level].gamesPlayed > 0
+                      ? Math.round((gameHistory[level].wins / gameHistory[level].gamesPlayed) * 100)
+                      : 0}%
                   </Text>
                 </View>
-                <View style={styles.statsContainer}>
-                  <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Games:</Text>
-                    <Text style={styles.statValue}>{gameHistory[level].gamesPlayed}</Text>
-                  </View>
-                  <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Wins:</Text>
-                    <Text style={styles.statValue}>
-                      {gameHistory[level].gamesPlayed > 0
-                        ? Math.round((gameHistory[level].wins / gameHistory[level].gamesPlayed) * 100)
-                        : 0}%
-                    </Text>
-                  </View>
-                  <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Best Streak:</Text>
-                    <Text style={styles.statValue}>{gameHistory[level].bestStreak}</Text>
-                  </View>
-                  <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Best Score:</Text>
-                    <Text style={styles.statValue}>{gameHistory[level].bestScore}</Text>
-                  </View>
+                <View style={[styles.statRow, isTablet && styles.statRowTablet]}>
+                  <Text style={[styles.statLabel, isTablet && styles.statLabelTablet]}>Best Streak:</Text>
+                  <Text style={[styles.statValue, isTablet && styles.statValueTablet]}>{gameHistory[level].bestStreak}</Text>
+                </View>
+                <View style={[styles.statRow, isTablet && styles.statRowTablet]}>
+                  <Text style={[styles.statLabel, isTablet && styles.statLabelTablet]}>Best Score:</Text>
+                  <Text style={[styles.statValue, isTablet && styles.statValueTablet]}>{gameHistory[level].bestScore}</Text>
                 </View>
               </View>
-            </TouchableOpacity>
-          ))}
-        </View>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+
+    return (
+      <View style={styles.container}>
+        <Text style={[
+          styles.title,
+          isSmallScreen && styles.titleSmall
+        ]}>Select Difficulty</Text>
+        {isSmallScreen ? (
+          <ScrollView
+            contentContainerStyle={styles.scrollViewContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <DifficultyContent />
+          </ScrollView>
+        ) : (
+          <DifficultyContent />
+        )}
       </View>
     );
   }
@@ -240,54 +293,149 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
     paddingTop: 30,
+    letterSpacing: 1,
+    textShadowColor: 'rgba(255, 255, 255, 0.1)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 3,
   },
   difficultyContainer: {
-    width: '85%',
+    width: '90%',
     gap: 12,
     alignSelf: 'center',
+    paddingHorizontal: 15,
+    paddingBottom: 20,
   },
   difficultyButton: {
-    backgroundColor: COLORS.KEYBOARD_BG,
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: 'rgba(129, 131, 132, 0.1)',
+    borderRadius: 15,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    marginBottom: 8,
   },
   difficultyContent: {
-    width: '100%',
+    padding: 15,
   },
   difficultyHeader: {
-    marginBottom: 8,
+    marginBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.1)',
-    paddingBottom: 6,
+    paddingBottom: 8,
   },
   difficultyText: {
     color: COLORS.TEXT,
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
     textAlign: 'center',
+    letterSpacing: 0.5,
+    lineHeight: 28,
   },
   statsContainer: {
-    width: '100%',
-    paddingHorizontal: 8,
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    paddingHorizontal: 8,
   },
   statRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
     width: '48%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 6,
+    backgroundColor: 'rgba(58, 58, 60, 0.3)',
+    padding: 8,
+    borderRadius: 8,
   },
   statLabel: {
-    color: COLORS.TEXT,
+    color: 'rgba(255, 255, 255, 0.8)',
     fontSize: 14,
-    opacity: 0.8,
-    marginRight: 5,
+    fontWeight: '500',
   },
   statValue: {
     color: COLORS.TEXT,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
+  },
+  // Tablet-specific styles
+  difficultyContainerTablet: {
+    width: '70%',
+    maxWidth: 800,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 20,
+  },
+  difficultyButtonTablet: {
+    width: '45%',
+    minWidth: 300,
+  },
+  difficultyTextTablet: {
+    fontSize: 26,
+    lineHeight: 32,
+  },
+  statsContainerTablet: {
+    paddingHorizontal: 15,
+  },
+  statRowTablet: {
+    padding: 12,
+    marginVertical: 8,
+  },
+  statLabelTablet: {
+    fontSize: 16,
+  },
+  statValueTablet: {
+    fontSize: 18,
+  },
+  // Small screen specific styles
+  titleSmall: {
+    fontSize: 24,
+    marginBottom: 15,
+    paddingTop: 20,
+  },
+  difficultyContainerSmall: {
+    width: '95%',
+    gap: 8,
+    paddingHorizontal: 10,
+    paddingBottom: 15,
+  },
+  difficultyButtonSmall: {
+    borderRadius: 12,
+    marginBottom: 6,
+  },
+  difficultyContentSmall: {
+    padding: 12,
+  },
+  difficultyHeaderSmall: {
+    marginBottom: 8,
+    paddingBottom: 6,
+  },
+  difficultyTextSmall: {
+    fontSize: 18,
+    lineHeight: 24,
+  },
+  statsContainerSmall: {
+    paddingHorizontal: 6,
+    gap: 4,
+  },
+  statRowSmall: {
+    padding: 6,
+    marginVertical: 3,
+    borderRadius: 6,
+    width: '47%',
+  },
+  statLabelSmall: {
+    fontSize: 12,
+  },
+  statValueSmall: {
+    fontSize: 14,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
   },
 });

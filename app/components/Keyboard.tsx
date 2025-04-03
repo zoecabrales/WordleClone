@@ -5,7 +5,7 @@ import * as Haptics from 'expo-haptics';
 const KEYBOARD_ROWS = [
     ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
     ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-    ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'DELETE'],
+    ['⏎', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '⌫'],
 ];
 
 type LetterState = {
@@ -24,11 +24,14 @@ export const Keyboard = ({ onKeyPress, disabled = false, letterStates }: Keyboar
     const handlePress = async (key: string) => {
         if (disabled) return;
 
+        // Map symbols back to commands
+        const mappedKey = key === '⏎' ? 'ENTER' : key === '⌫' ? 'DELETE' : key;
+
         // Trigger haptic feedback
         try {
             if (Platform.OS !== 'web') {
                 await Haptics.impactAsync(
-                    key === 'ENTER' || key === 'DELETE'
+                    mappedKey === 'ENTER' || mappedKey === 'DELETE'
                         ? Haptics.ImpactFeedbackStyle.Medium
                         : Haptics.ImpactFeedbackStyle.Light
                 );
@@ -38,11 +41,11 @@ export const Keyboard = ({ onKeyPress, disabled = false, letterStates }: Keyboar
         }
 
         // Call onKeyPress immediately after triggering haptics
-        onKeyPress(key);
+        onKeyPress(mappedKey);
     };
 
     const getKeyStyle = (key: string) => {
-        if (key === 'ENTER' || key === 'DELETE') return styles.key;
+        if (key === '⏎' || key === '⌫') return styles.key;
 
         const letterState = letterStates[key];
         if (!letterState) return styles.key;
@@ -61,9 +64,11 @@ export const Keyboard = ({ onKeyPress, disabled = false, letterStates }: Keyboar
 
     const isKeyDisabled = (key: string): boolean => {
         if (disabled) return true;
-        if (key === 'ENTER' || key === 'DELETE') return false;
+        if (key === '⏎' || key === '⌫') return false;
 
         const letterState = letterStates[key];
+        // Only disable if the letter is marked as absent
+        // Keep enabled if it's correct, present, or unused
         return letterState?.status === 'absent';
     };
 
@@ -117,9 +122,11 @@ const styles = StyleSheet.create({
     },
     enterKey: {
         minWidth: 65,
+        marginLeft: 6,
     },
     deleteKey: {
         minWidth: 65,
+        marginRight: 6,
     },
     correctKey: {
         backgroundColor: COLORS.KEYBOARD_CORRECT,
