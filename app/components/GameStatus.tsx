@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
 import { useEffect, useRef } from 'react';
-import { COLORS } from '../constants/colors';
+import { useThemeStore } from '../store/themeStore';
 
 type GameStats = {
     totalGames: number;
@@ -21,6 +21,7 @@ type GameStatusProps = {
 export const GameStatus = ({ status, word, onPlayAgain, score, stats }: GameStatusProps) => {
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const scaleAnim = useRef(new Animated.Value(0.5)).current;
+    const { theme } = useThemeStore();
 
     useEffect(() => {
         if (status !== 'playing') {
@@ -44,58 +45,59 @@ export const GameStatus = ({ status, word, onPlayAgain, score, stats }: GameStat
     const winRate = stats ? Math.round((stats.wins / stats.totalGames) * 100) : 0;
 
     return (
-        <View style={styles.overlay}>
+        <View style={[styles.overlay, { backgroundColor: theme.modal.overlay }]}>
             <Animated.View
                 style={[
                     styles.container,
                     {
                         opacity: fadeAnim,
-                        transform: [{ scale: scaleAnim }]
+                        transform: [{ scale: scaleAnim }],
+                        backgroundColor: theme.modal.background
                     }
                 ]}
             >
-                <Text style={styles.title}>
+                <Text style={[styles.title, { color: theme.text }]}>
                     {status === 'won' ? 'Congratulations!' : 'Game Over!'}
                 </Text>
 
                 {status === 'lost' && word && (
-                    <Text style={styles.word}>The word was: {word}</Text>
+                    <Text style={[styles.word, { color: theme.text }]}>The word was: {word}</Text>
                 )}
 
                 {status === 'won' && score !== undefined && (
-                    <Text style={styles.score}>Score: {score}</Text>
+                    <Text style={[styles.score, { color: theme.text }]}>Score: {score}</Text>
                 )}
 
                 {stats && (
-                    <View style={styles.statsContainer}>
+                    <View style={[styles.statsContainer, { backgroundColor: theme.stats.background, borderColor: theme.stats.border }]}>
                         <View style={styles.statRow}>
-                            <Text style={styles.statLabel}>Games Played:</Text>
-                            <Text style={styles.statValue}>{stats.totalGames}</Text>
+                            <Text style={[styles.statLabel, { color: theme.stats.text }]}>Games Played:</Text>
+                            <Text style={[styles.statValue, { color: theme.stats.text }]}>{stats.totalGames}</Text>
                         </View>
                         <View style={styles.statRow}>
-                            <Text style={styles.statLabel}>Win Rate:</Text>
-                            <Text style={styles.statValue}>{winRate}%</Text>
+                            <Text style={[styles.statLabel, { color: theme.stats.text }]}>Win Rate:</Text>
+                            <Text style={[styles.statValue, { color: theme.stats.text }]}>{winRate}%</Text>
                         </View>
                         <View style={styles.statRow}>
-                            <Text style={styles.statLabel}>Current Streak:</Text>
-                            <Text style={styles.statValue}>{stats.currentStreak}</Text>
+                            <Text style={[styles.statLabel, { color: theme.stats.text }]}>Current Streak:</Text>
+                            <Text style={[styles.statValue, { color: theme.stats.text }]}>{stats.currentStreak}</Text>
                         </View>
                         <View style={styles.statRow}>
-                            <Text style={styles.statLabel}>Best Streak:</Text>
-                            <Text style={styles.statValue}>{stats.bestStreak}</Text>
+                            <Text style={[styles.statLabel, { color: theme.stats.text }]}>Best Streak:</Text>
+                            <Text style={[styles.statValue, { color: theme.stats.text }]}>{stats.bestStreak}</Text>
                         </View>
                         <View style={styles.statRow}>
-                            <Text style={styles.statLabel}>Total Score:</Text>
-                            <Text style={styles.statValue}>{stats.totalScore}</Text>
+                            <Text style={[styles.statLabel, { color: theme.stats.text }]}>Total Score:</Text>
+                            <Text style={[styles.statValue, { color: theme.stats.text }]}>{stats.totalScore}</Text>
                         </View>
                     </View>
                 )}
 
                 <TouchableOpacity
-                    style={styles.button}
+                    style={[styles.button, { backgroundColor: theme.keyboard.correct }]}
                     onPress={onPlayAgain}
                 >
-                    <Text style={styles.buttonText}>Play Again</Text>
+                    <Text style={[styles.buttonText, { color: theme.text }]}>Play Again</Text>
                 </TouchableOpacity>
             </Animated.View>
         </View>
@@ -105,7 +107,6 @@ export const GameStatus = ({ status, word, onPlayAgain, score, stats }: GameStat
 const styles = StyleSheet.create({
     overlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0, 0, 0, 0.9)',
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 1000,
@@ -114,23 +115,19 @@ const styles = StyleSheet.create({
         padding: 40,
         alignItems: 'center',
         borderRadius: 20,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
     },
     title: {
-        color: COLORS.TEXT,
         fontSize: 36,
         fontWeight: 'bold',
         marginBottom: 20,
         textAlign: 'center',
     },
     word: {
-        color: COLORS.TEXT,
         fontSize: 24,
         marginBottom: 30,
         textAlign: 'center',
     },
     score: {
-        color: COLORS.TEXT,
         fontSize: 28,
         marginBottom: 30,
         textAlign: 'center',
@@ -139,8 +136,8 @@ const styles = StyleSheet.create({
         width: '100%',
         marginBottom: 30,
         padding: 20,
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
         borderRadius: 10,
+        borderWidth: 1,
     },
     statRow: {
         flexDirection: 'row',
@@ -149,24 +146,20 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     statLabel: {
-        color: COLORS.TEXT,
         fontSize: 16,
         opacity: 0.8,
     },
     statValue: {
-        color: COLORS.TEXT,
         fontSize: 16,
         fontWeight: 'bold',
     },
     button: {
-        backgroundColor: COLORS.KEYBOARD_CORRECT,
         paddingHorizontal: 40,
         paddingVertical: 15,
         borderRadius: 10,
         marginTop: 20,
     },
     buttonText: {
-        color: COLORS.TEXT,
         fontSize: 24,
         fontWeight: 'bold',
     },

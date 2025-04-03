@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import { COLORS } from '../constants/colors';
+import { useThemeStore } from '../store/themeStore';
 
 type HintProps = {
     hint: string;
@@ -8,6 +8,8 @@ type HintProps = {
 const MAX_HINT_LENGTH = 100; // Maximum characters before truncating
 
 export const Hint = ({ hint }: HintProps) => {
+    const { theme } = useThemeStore();
+
     // Truncate hint if it's too long
     const processedHint = hint.length > MAX_HINT_LENGTH
         ? hint.substring(0, MAX_HINT_LENGTH - 3) + '...'
@@ -16,9 +18,9 @@ export const Hint = ({ hint }: HintProps) => {
     return (
         <View style={styles.container}>
             <View style={styles.contentContainer}>
-                <Text style={styles.label}>Hint:</Text>
+                <Text style={[styles.label, { color: theme.text }]}>HINT:</Text>
                 <Text
-                    style={styles.hint}
+                    style={[styles.hint, { color: theme.text }]}
                     numberOfLines={2}
                     adjustsFontSizeToFit
                 >
@@ -45,14 +47,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
     },
     label: {
-        color: COLORS.TEXT,
         fontSize: 12,
         fontWeight: 'bold',
         marginRight: 5,
         opacity: 0.7,
     },
     hint: {
-        color: COLORS.TEXT,
         fontSize: 12,
         fontStyle: 'italic',
         opacity: 0.7,

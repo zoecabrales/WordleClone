@@ -8,11 +8,14 @@ import { useGameStore } from "./store/gameStore";
 import { COLORS } from "./constants/colors";
 import { Difficulty, DIFFICULTY_SETTINGS } from "./constants/gameSettings";
 import { useEffect } from "react";
+import { useThemeStore } from "./store/themeStore";
+import { ThemeToggle } from "./components/ThemeToggle";
 
 export default function Index() {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isTablet = windowWidth >= 768;
   const isSmallScreen = windowHeight < 700; // For devices like iPhone SE
+  const { theme, initializeTheme } = useThemeStore();
 
   // Get state from Zustand store
   const {
@@ -41,10 +44,13 @@ export default function Index() {
     submitGuess,
   } = useGameStore();
 
-  // Load saved stats when component mounts
+  // Load saved stats and theme when component mounts
   useEffect(() => {
     const initializeApp = async () => {
-      await loadSavedStats();
+      await Promise.all([
+        loadSavedStats(),
+        initializeTheme()
+      ]);
     };
     initializeApp();
   }, []);
@@ -63,9 +69,9 @@ export default function Index() {
 
   if (isLoadingStats) {
     return (
-      <View style={[styles.container, styles.loadingContainer]}>
-        <ActivityIndicator size="large" color={COLORS.TEXT} />
-        <Text style={styles.loadingText}>Loading game stats...</Text>
+      <View style={[styles.container, styles.loadingContainer, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.text} />
+        <Text style={[styles.loadingText, { color: theme.text }]}>Loading game stats...</Text>
       </View>
     );
   }
@@ -77,11 +83,18 @@ export default function Index() {
         isTablet && styles.difficultyContainerTablet,
         isSmallScreen && styles.difficultyContainerSmall
       ]}>
+        <View style={styles.themeToggleContainer}>
+          <ThemeToggle />
+        </View>
         {(Object.keys(DIFFICULTY_SETTINGS) as Difficulty[]).map((level) => (
           <TouchableOpacity
             key={level}
             style={[
               styles.difficultyButton,
+              {
+                borderColor: theme.border,
+                backgroundColor: theme.stats.background,
+              },
               isTablet && styles.difficultyButtonTablet,
               isSmallScreen && styles.difficultyButtonSmall
             ]}
@@ -93,10 +106,16 @@ export default function Index() {
             ]}>
               <View style={[
                 styles.difficultyHeader,
+                {
+                  borderBottomColor: theme.border,
+                },
                 isSmallScreen && styles.difficultyHeaderSmall
               ]}>
                 <Text style={[
                   styles.difficultyText,
+                  {
+                    color: theme.text,
+                  },
                   isTablet && styles.difficultyTextTablet,
                   isSmallScreen && styles.difficultyTextSmall
                 ]}>
@@ -112,35 +131,86 @@ export default function Index() {
               ]}>
                 <View style={[
                   styles.statRow,
+                  {
+                    backgroundColor: theme.stats.background,
+                    borderColor: theme.stats.border,
+                  },
                   isTablet && styles.statRowTablet,
                   isSmallScreen && styles.statRowSmall
                 ]}>
                   <Text style={[
                     styles.statLabel,
+                    { color: theme.stats.text },
                     isTablet && styles.statLabelTablet,
                     isSmallScreen && styles.statLabelSmall
                   ]}>Games:</Text>
                   <Text style={[
                     styles.statValue,
+                    { color: theme.stats.text },
                     isTablet && styles.statValueTablet,
                     isSmallScreen && styles.statValueSmall
                   ]}>{gameHistory[level].gamesPlayed}</Text>
                 </View>
-                <View style={[styles.statRow, isTablet && styles.statRowTablet]}>
-                  <Text style={[styles.statLabel, isTablet && styles.statLabelTablet]}>Wins:</Text>
-                  <Text style={[styles.statValue, isTablet && styles.statValueTablet]}>
+                <View style={[
+                  styles.statRow,
+                  {
+                    backgroundColor: theme.stats.background,
+                    borderColor: theme.stats.border,
+                  },
+                  isTablet && styles.statRowTablet
+                ]}>
+                  <Text style={[
+                    styles.statLabel,
+                    { color: theme.stats.text },
+                    isTablet && styles.statLabelTablet
+                  ]}>Wins:</Text>
+                  <Text style={[
+                    styles.statValue,
+                    { color: theme.stats.text },
+                    isTablet && styles.statValueTablet
+                  ]}>
                     {gameHistory[level].gamesPlayed > 0
                       ? Math.round((gameHistory[level].wins / gameHistory[level].gamesPlayed) * 100)
                       : 0}%
                   </Text>
                 </View>
-                <View style={[styles.statRow, isTablet && styles.statRowTablet]}>
-                  <Text style={[styles.statLabel, isTablet && styles.statLabelTablet]}>Best Streak:</Text>
-                  <Text style={[styles.statValue, isTablet && styles.statValueTablet]}>{gameHistory[level].bestStreak}</Text>
+                <View style={[
+                  styles.statRow,
+                  {
+                    backgroundColor: theme.stats.background,
+                    borderColor: theme.stats.border,
+                  },
+                  isTablet && styles.statRowTablet
+                ]}>
+                  <Text style={[
+                    styles.statLabel,
+                    { color: theme.stats.text },
+                    isTablet && styles.statLabelTablet
+                  ]}>Best Streak:</Text>
+                  <Text style={[
+                    styles.statValue,
+                    { color: theme.stats.text },
+                    isTablet && styles.statValueTablet
+                  ]}>{gameHistory[level].bestStreak}</Text>
                 </View>
-                <View style={[styles.statRow, isTablet && styles.statRowTablet]}>
-                  <Text style={[styles.statLabel, isTablet && styles.statLabelTablet]}>Best Score:</Text>
-                  <Text style={[styles.statValue, isTablet && styles.statValueTablet]}>{gameHistory[level].bestScore}</Text>
+                <View style={[
+                  styles.statRow,
+                  {
+                    backgroundColor: theme.stats.background,
+                    borderColor: theme.stats.border,
+                  },
+                  isTablet && styles.statRowTablet
+                ]}>
+                  <Text style={[
+                    styles.statLabel,
+                    { color: theme.stats.text },
+                    isTablet && styles.statLabelTablet
+                  ]}>Best Score:</Text>
+                  <Text style={[
+                    styles.statValue,
+                    { color: theme.stats.text },
+                    isTablet && styles.statValueTablet
+                  ]}>{gameHistory[level].bestScore}</Text>
                 </View>
               </View>
             </View>
@@ -150,11 +220,7 @@ export default function Index() {
     );
 
     return (
-      <View style={styles.container}>
-        <Text style={[
-          styles.title,
-          isSmallScreen && styles.titleSmall
-        ]}>Select Difficulty</Text>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
         {isSmallScreen ? (
           <ScrollView
             contentContainerStyle={styles.scrollViewContent}
@@ -171,15 +237,15 @@ export default function Index() {
 
   if (isLoading) {
     return (
-      <View style={[styles.container, styles.loadingContainer]}>
-        <ActivityIndicator size="large" color={COLORS.TEXT} />
-        <Text style={styles.loadingText}>Loading new word...</Text>
+      <View style={[styles.container, styles.loadingContainer, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.text} />
+        <Text style={[styles.loadingText, { color: theme.text }]}>Loading new word...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <GameStatus
         status={gameStatus}
         word={targetWord}
@@ -189,34 +255,40 @@ export default function Index() {
           if (gameStatus !== 'playing') {
             updateGameHistory(gameStatus, score || 0);
           }
-          startGame(difficulty);
+          // Reset game state and return to difficulty screen
+          setGameStatus('playing');
+          useGameStore.setState({ isGameStarted: false });
         }}
       />
       <View style={[
         styles.gameContent,
         gameStatus !== 'playing' && styles.blurred
       ]}>
-        <Timer
-          initialTime={DIFFICULTY_SETTINGS[difficulty].time}
-          timeRemaining={timeRemaining}
-          isRunning={isTimerRunning}
-          onTimeUp={() => {
-            if (gameStatus === 'playing') {
-              setGameStatus('lost');
-            }
-          }}
-        />
-        <Hint hint={hint} />
-        <GameBoard
-          targetWord={targetWord}
-          currentGuess={currentGuess}
-          guesses={guesses}
-        />
-        <Keyboard
-          onKeyPress={handleKeyPress}
-          disabled={gameStatus !== 'playing'}
-          letterStates={letterStates}
-        />
+        <View style={styles.gameTopContent}>
+          <Timer
+            initialTime={DIFFICULTY_SETTINGS[difficulty].time}
+            timeRemaining={timeRemaining}
+            isRunning={isTimerRunning}
+            onTimeUp={() => {
+              if (gameStatus === 'playing') {
+                setGameStatus('lost');
+              }
+            }}
+          />
+          <Hint hint={hint} />
+          <GameBoard
+            targetWord={targetWord}
+            currentGuess={currentGuess}
+            guesses={guesses}
+          />
+        </View>
+        <View style={styles.keyboardContainer}>
+          <Keyboard
+            onKeyPress={handleKeyPress}
+            disabled={gameStatus !== 'playing'}
+            letterStates={letterStates}
+          />
+        </View>
       </View>
     </View>
   );
@@ -225,13 +297,33 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.BACKGROUND,
+    paddingTop: 50,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 20,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
   },
   gameContent: {
     flex: 1,
-    alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 20,
+  },
+  gameTopContent: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  keyboardContainer: {
+    width: '100%',
+    alignItems: 'center',
+    paddingBottom: 20,
   },
   blurred: {
     opacity: 0.3,
@@ -245,18 +337,6 @@ const styles = StyleSheet.create({
     color: COLORS.TEXT,
     fontSize: 18,
   },
-  title: {
-    color: COLORS.TEXT,
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-    paddingTop: 30,
-    letterSpacing: 1,
-    textShadowColor: 'rgba(255, 255, 255, 0.1)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 3,
-  },
   difficultyContainer: {
     width: '90%',
     gap: 12,
@@ -265,11 +345,9 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   difficultyButton: {
-    backgroundColor: 'rgba(129, 131, 132, 0.1)',
     borderRadius: 15,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: COLORS.BORDER,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -283,11 +361,9 @@ const styles = StyleSheet.create({
   difficultyHeader: {
     marginBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
     paddingBottom: 8,
   },
   difficultyText: {
-    color: COLORS.TEXT,
     fontSize: 22,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -306,17 +382,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginVertical: 6,
-    backgroundColor: 'rgba(58, 58, 60, 0.3)',
     padding: 8,
     borderRadius: 8,
+    borderWidth: 1,
   },
   statLabel: {
-    color: 'rgba(255, 255, 255, 0.8)',
     fontSize: 14,
     fontWeight: '500',
+    opacity: 0.8,
   },
   statValue: {
-    color: COLORS.TEXT,
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -351,11 +426,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   // Small screen specific styles
-  titleSmall: {
-    fontSize: 24,
-    marginBottom: 15,
-    paddingTop: 20,
-  },
   difficultyContainerSmall: {
     width: '95%',
     gap: 8,
@@ -396,5 +466,11 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     flexGrow: 1,
     paddingBottom: 20,
+  },
+  themeToggleContainer: {
+    position: 'absolute',
+    top: 10,
+    right: 20,
+    zIndex: 1,
   },
 });
