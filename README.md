@@ -107,18 +107,6 @@ wordleClone/
 └── types/               # TypeScript type definitions
 ```
 
-## Future Enhancements
-
-- [ ] Online multiplayer mode
-- [ ] Daily challenges
-- [ ] Social sharing features
-- [ ] Custom word lists
-- [ ] Theme customization
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## Acknowledgments
 
 - Inspired by the original [Wordle](https://www.nytimes.com/games/wordle/index.html) game
@@ -127,6 +115,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contact
 
-Jireh Zoe Cabral - [@zoecabrales](https://github.com/zoecabrales)
+Jireh Zoe Cabrales - [@zoecabrales](https://github.com/zoecabrales)
 
 Project Link: [https://github.com/zoecabrales/WordleClone](https://github.com/zoecabrales/WordleClone)
