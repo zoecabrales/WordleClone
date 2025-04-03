@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { COLORS } from '../constants/colors';
+import { useGameStore } from '../store/gameStore';
 
 type TimerProps = {
     initialTime: number; // in seconds
@@ -11,6 +12,17 @@ type TimerProps = {
 
 export const Timer = ({ initialTime, onTimeUp, isRunning, timeRemaining }: TimerProps) => {
     const [progressWidth] = useState(new Animated.Value(1));
+    const updateTimer = useGameStore(state => state.updateTimer);
+
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (isRunning) {
+            timer = setInterval(() => {
+                updateTimer();
+            }, 1000);
+        }
+        return () => clearInterval(timer);
+    }, [isRunning, updateTimer]);
 
     useEffect(() => {
         if (isRunning) {
@@ -24,7 +36,7 @@ export const Timer = ({ initialTime, onTimeUp, isRunning, timeRemaining }: Timer
             // Reset or pause animation
             progressWidth.setValue(timeRemaining / initialTime);
         }
-    }, [isRunning, initialTime]);
+    }, [isRunning, initialTime, timeRemaining]);
 
     const formatTime = (seconds: number) => {
         const minutes = Math.floor(seconds / 60);

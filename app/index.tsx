@@ -4,85 +4,50 @@ import { Keyboard } from "./components/Keyboard";
 import { GameStatus } from "./components/GameStatus";
 import { Timer } from "./components/Timer";
 import { Hint } from "./components/Hint";
-import { useGame } from "./hooks/useGame";
+import { useGameStore } from "./store/gameStore";
 import { COLORS } from "./constants/colors";
 import { Difficulty, DIFFICULTY_SETTINGS } from "./constants/gameSettings";
-import { useState, useEffect } from "react";
-import { storageService, GameStats } from "./services/storageService";
-
-const DEFAULT_STATS: GameStats = {
-  easy: { gamesPlayed: 0, wins: 0, bestStreak: 0, bestScore: 0 },
-  medium: { gamesPlayed: 0, wins: 0, bestStreak: 0, bestScore: 0 },
-  hard: { gamesPlayed: 0, wins: 0, bestStreak: 0, bestScore: 0 },
-};
+import { useEffect } from "react";
 
 export default function Index() {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isTablet = windowWidth >= 768;
   const isSmallScreen = windowHeight < 700; // For devices like iPhone SE
-  const [difficulty, setDifficulty] = useState<Difficulty>('medium');
-  const [isGameStarted, setIsGameStarted] = useState(false);
-  const [gameHistory, setGameHistory] = useState<GameStats>(DEFAULT_STATS);
-  const [isLoadingStats, setIsLoadingStats] = useState(true);
 
+  // Get state from Zustand store
   const {
+    difficulty,
+    isGameStarted,
+    isLoadingStats,
+    isLoading,
     targetWord,
     hint,
     currentGuess,
     guesses,
     gameStatus,
-    setGameStatus,
     score,
     timeRemaining,
     isTimerRunning,
-    isLoading,
     letterStates,
+    gameHistory,
     stats,
+    // Actions
+    startGame,
+    loadSavedStats,
+    updateGameHistory,
+    setGameStatus,
     addLetter,
     deleteLetter,
     submitGuess,
-    resetGame,
-  } = useGame(difficulty);
+  } = useGameStore();
 
   // Load saved stats when component mounts
   useEffect(() => {
-    loadSavedStats();
-  }, []);
-
-  const loadSavedStats = async () => {
-    try {
-      const savedStats = await storageService.loadGameStats();
-      setGameHistory(savedStats);
-    } catch (error) {
-      console.error('Error loading saved stats:', error);
-    } finally {
-      setIsLoadingStats(false);
-    }
-  };
-
-  // Update game history and save to storage
-  const updateGameHistory = async (status: 'won' | 'lost', finalScore: number) => {
-    const newHistory = {
-      ...gameHistory,
-      [difficulty]: {
-        gamesPlayed: gameHistory[difficulty].gamesPlayed + 1,
-        wins: status === 'won' ? gameHistory[difficulty].wins + 1 : gameHistory[difficulty].wins,
-        bestStreak: stats.currentStreak > gameHistory[difficulty].bestStreak
-          ? stats.currentStreak
-          : gameHistory[difficulty].bestStreak,
-        bestScore: status === 'won' && finalScore > gameHistory[difficulty].bestScore
-          ? finalScore
-          : gameHistory[difficulty].bestScore,
-      }
+    const initializeApp = async () => {
+      await loadSavedStats();
     };
-
-    setGameHistory(newHistory);
-    try {
-      await storageService.saveGameStats(newHistory);
-    } catch (error) {
-      console.error('Error saving game stats:', error);
-    }
-  };
+    initializeApp();
+  }, []);
 
   const handleKeyPress = (key: string) => {
     if (gameStatus !== 'playing') return;
@@ -94,12 +59,6 @@ export default function Index() {
     } else {
       addLetter(key);
     }
-  };
-
-  const startNewGame = async (selectedDifficulty: Difficulty) => {
-    setDifficulty(selectedDifficulty);
-    setIsGameStarted(true);
-    await resetGame();
   };
 
   if (isLoadingStats) {
@@ -126,7 +85,7 @@ export default function Index() {
               isTablet && styles.difficultyButtonTablet,
               isSmallScreen && styles.difficultyButtonSmall
             ]}
-            onPress={() => startNewGame(level)}
+            onPress={() => startGame(level)}
           >
             <View style={[
               styles.difficultyContent,
@@ -230,7 +189,7 @@ export default function Index() {
           if (gameStatus !== 'playing') {
             updateGameHistory(gameStatus, score || 0);
           }
-          setIsGameStarted(false);
+          startGame(difficulty);
         }}
       />
       <View style={[
