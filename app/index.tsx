@@ -75,6 +75,7 @@ export default function Index() {
           barStyle={isDarkMode ? "light-content" : "dark-content"}
           backgroundColor={theme.background}
         />
+        <Text style={[styles.smallTitle, { color: theme.title }]}>Wordle</Text>
         <ActivityIndicator size="large" color={theme.text} />
         <Text style={[styles.loadingText, { color: theme.text }]}>Loading game stats...</Text>
       </SafeAreaView>
@@ -88,7 +89,8 @@ export default function Index() {
         isTablet && styles.difficultyContainerTablet,
         isSmallScreen && styles.difficultyContainerSmall
       ]}>
-        <View style={styles.themeToggleContainer}>
+        <View style={styles.headerRow}>
+          <Text style={[styles.smallTitle, { color: theme.title }]}>Wordle</Text>
           <ThemeToggle />
         </View>
         {(Object.keys(DIFFICULTY_SETTINGS) as Difficulty[]).map((level) => (
@@ -251,6 +253,7 @@ export default function Index() {
           barStyle={isDarkMode ? "light-content" : "dark-content"}
           backgroundColor={theme.background}
         />
+        <Text style={[styles.smallTitle, { color: theme.title }]}>Wordle</Text>
         <ActivityIndicator size="large" color={theme.text} />
         <Text style={[styles.loadingText, { color: theme.text }]}>Loading new word...</Text>
       </SafeAreaView>
@@ -263,6 +266,7 @@ export default function Index() {
         barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={theme.background}
       />
+      <Text style={[styles.smallTitle, { color: theme.title }]}>Wordle</Text>
       <GameStatus
         status={gameStatus}
         word={targetWord}
@@ -314,7 +318,6 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 50,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -330,17 +333,19 @@ const styles = StyleSheet.create({
   gameContent: {
     flex: 1,
     justifyContent: "space-between",
-    paddingVertical: 20,
+    paddingHorizontal: 10,
   },
   gameTopContent: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
+    paddingTop: 10,
+    gap: 15,
   },
   keyboardContainer: {
     width: '100%',
     alignItems: 'center',
-    paddingBottom: 20,
+    paddingVertical: 10,
   },
   blurred: {
     opacity: 0.3,
@@ -351,7 +356,6 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   loadingText: {
-    color: COLORS.TEXT,
     fontSize: 18,
   },
   difficultyContainer: {
@@ -484,10 +488,21 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: 20,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    paddingVertical: 10,
+    position: 'relative',
+  },
+  smallTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
   themeToggleContainer: {
     position: 'absolute',
-    top: 10,
-    right: 20,
-    zIndex: 1,
+    right: 0,
   },
 });
