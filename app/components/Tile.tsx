@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, Animated } from 'react-native';
-import { COLORS } from '../constants/colors';
 import { useEffect, useRef } from 'react';
+import { useThemeStore } from '../store/themeStore';
 
 type TileProps = {
     letter?: string;
@@ -9,6 +9,7 @@ type TileProps = {
 };
 
 export const Tile = ({ letter, status = 'empty', isRevealing = false }: TileProps) => {
+    const { theme } = useThemeStore();
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const opacityAnim = useRef(new Animated.Value(1)).current;
 
@@ -48,13 +49,13 @@ export const Tile = ({ letter, status = 'empty', isRevealing = false }: TileProp
     const getBackgroundColor = () => {
         switch (status) {
             case 'correct':
-                return COLORS.TILE_CORRECT;
+                return theme.tile.correct;
             case 'present':
-                return COLORS.TILE_PRESENT;
+                return theme.tile.present;
             case 'absent':
-                return COLORS.TILE_ABSENT;
+                return theme.tile.absent;
             default:
-                return COLORS.TILE_EMPTY;
+                return theme.tile.empty;
         }
     };
 
@@ -64,12 +65,13 @@ export const Tile = ({ letter, status = 'empty', isRevealing = false }: TileProp
                 styles.tile,
                 {
                     backgroundColor: getBackgroundColor(),
+                    borderColor: theme.border,
                     transform: [{ scale: scaleAnim }],
                     opacity: opacityAnim,
                 }
             ]}
         >
-            <Text style={styles.letter}>
+            <Text style={[styles.letter, { color: theme.text }]}>
                 {letter?.toUpperCase()}
             </Text>
         </Animated.View>
@@ -81,7 +83,6 @@ const styles = StyleSheet.create({
         width: 52,
         height: 52,
         borderWidth: 2,
-        borderColor: '#3a3a3c',
         justifyContent: 'center',
         alignItems: 'center',
         margin: 3,
@@ -96,7 +97,6 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     letter: {
-        color: COLORS.TEXT,
         fontSize: 28,
         fontWeight: 'bold',
         textShadowColor: 'rgba(0, 0, 0, 0.3)',

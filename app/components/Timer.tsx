@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
-import { COLORS } from '../constants/colors';
+import { useGameStore } from '../store/gameStore';
+import { useThemeStore } from '../store/themeStore';
 
 type TimerProps = {
     initialTime: number; // in seconds
@@ -11,6 +12,18 @@ type TimerProps = {
 
 export const Timer = ({ initialTime, onTimeUp, isRunning, timeRemaining }: TimerProps) => {
     const [progressWidth] = useState(new Animated.Value(1));
+    const updateTimer = useGameStore(state => state.updateTimer);
+    const { theme } = useThemeStore();
+
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (isRunning) {
+            timer = setInterval(() => {
+                updateTimer();
+            }, 1000);
+        }
+        return () => clearInterval(timer);
+    }, [isRunning, updateTimer]);
 
     useEffect(() => {
         if (isRunning) {
@@ -24,7 +37,7 @@ export const Timer = ({ initialTime, onTimeUp, isRunning, timeRemaining }: Timer
             // Reset or pause animation
             progressWidth.setValue(timeRemaining / initialTime);
         }
-    }, [isRunning, initialTime]);
+    }, [isRunning, initialTime, timeRemaining]);
 
     const formatTime = (seconds: number) => {
         const minutes = Math.floor(seconds / 60);
@@ -35,15 +48,15 @@ export const Timer = ({ initialTime, onTimeUp, isRunning, timeRemaining }: Timer
     // Calculate color based on remaining time
     const getColor = () => {
         const percentage = timeRemaining / initialTime;
-        if (percentage > 0.6) return COLORS.TILE_CORRECT;
-        if (percentage > 0.3) return COLORS.TILE_PRESENT;
-        return COLORS.TILE_ABSENT;
+        if (percentage > 0.6) return theme.tile.correct;
+        if (percentage > 0.3) return theme.tile.present;
+        return theme.tile.absent;
     };
 
     return (
         <View style={styles.container}>
-            <Text style={styles.time}>{formatTime(timeRemaining)}</Text>
-            <View style={styles.progressBackground}>
+            <Text style={[styles.time, { color: theme.text }]}>{formatTime(timeRemaining)}</Text>
+            <View style={[styles.progressBackground, { backgroundColor: theme.border }]}>
                 <Animated.View
                     style={[
                         styles.progressBar,
@@ -68,7 +81,6 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     time: {
-        color: COLORS.TEXT,
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 5,
@@ -76,7 +88,6 @@ const styles = StyleSheet.create({
     progressBackground: {
         width: '80%',
         height: 8,
-        backgroundColor: '#3a3a3c',
         borderRadius: 4,
         overflow: 'hidden',
     },

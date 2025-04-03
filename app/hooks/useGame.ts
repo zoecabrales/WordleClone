@@ -103,29 +103,24 @@ export const useGame = (difficulty: Difficulty = 'medium') => {
 
         // Second pass: Mark present and absent letters
         guessLetters.forEach((letter, index) => {
-            if (!newStates[letter] || newStates[letter].position !== index) {
-                if (targetLetters.includes(letter)) {
-                    // Count occurrences in target and correct guesses
-                    const targetCount = targetLetters.filter(l => l === letter).length;
-                    const correctCount = guessLetters.filter((l, i) => l === letter && targetLetters[i] === letter).length;
+            // Skip if we've already marked this letter as correct at this position
+            if (newStates[letter]?.position === index) return;
 
-                    if (correctCount < targetCount) {
-                        newStates[letter] = {
-                            letter,
-                            status: 'present',
-                        };
-                    } else {
-                        newStates[letter] = {
-                            letter,
-                            status: 'absent',
-                        };
-                    }
-                } else {
+            if (targetLetters.includes(letter)) {
+                // If the letter exists in the target word
+                // Only mark as present if it's not already marked as correct
+                if (!newStates[letter] || newStates[letter].status !== 'correct') {
                     newStates[letter] = {
                         letter,
-                        status: 'absent',
+                        status: 'present',
                     };
                 }
+            } else {
+                // Only mark as absent if the letter doesn't exist in the target word at all
+                newStates[letter] = {
+                    letter,
+                    status: 'absent',
+                };
             }
         });
 

@@ -1,5 +1,6 @@
 import { View, StyleSheet } from 'react-native';
 import { Tile } from './Tile';
+import { useThemeStore } from '../store/themeStore';
 
 type GameBoardProps = {
     targetWord: string;
@@ -8,6 +9,8 @@ type GameBoardProps = {
 };
 
 export const GameBoard = ({ targetWord, currentGuess, guesses }: GameBoardProps) => {
+    const { theme } = useThemeStore();
+
     const getTileStatus = (rowIndex: number, colIndex: number) => {
         // If this is the current row being typed
         if (rowIndex === guesses.length) {
@@ -72,16 +75,15 @@ export const GameBoard = ({ targetWord, currentGuess, guesses }: GameBoardProps)
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 20,
+        padding: 10,
     },
     grid: {
-        gap: 5,
+        marginVertical: 20,
     },
     row: {
         flexDirection: 'row',
-        gap: 5,
+        marginBottom: 4,
     },
 }); 

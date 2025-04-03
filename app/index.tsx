@@ -1,85 +1,60 @@
-import { View, StyleSheet, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, StyleSheet, Text, TouchableOpacity, ActivityIndicator, Dimensions, useWindowDimensions, ScrollView, StatusBar } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { GameBoard } from "./components/GameBoard";
 import { Keyboard } from "./components/Keyboard";
 import { GameStatus } from "./components/GameStatus";
 import { Timer } from "./components/Timer";
 import { Hint } from "./components/Hint";
-import { useGame } from "./hooks/useGame";
+import { useGameStore } from "./store/gameStore";
 import { COLORS } from "./constants/colors";
 import { Difficulty, DIFFICULTY_SETTINGS } from "./constants/gameSettings";
-import { useState, useEffect } from "react";
-import { storageService, GameStats } from "./services/storageService";
-
-const DEFAULT_STATS: GameStats = {
-  easy: { gamesPlayed: 0, wins: 0, bestStreak: 0, bestScore: 0 },
-  medium: { gamesPlayed: 0, wins: 0, bestStreak: 0, bestScore: 0 },
-  hard: { gamesPlayed: 0, wins: 0, bestStreak: 0, bestScore: 0 },
-};
+import { useEffect } from "react";
+import { useThemeStore } from "./store/themeStore";
+import { ThemeToggle } from "./components/ThemeToggle";
 
 export default function Index() {
-  const [difficulty, setDifficulty] = useState<Difficulty>('medium');
-  const [isGameStarted, setIsGameStarted] = useState(false);
-  const [gameHistory, setGameHistory] = useState<GameStats>(DEFAULT_STATS);
-  const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isTablet = windowWidth >= 768;
+  const isSmallScreen = windowHeight < 700; // For devices like iPhone SE
+  const { theme, isDarkMode, initializeTheme } = useThemeStore();
 
+  // Get state from Zustand store
   const {
+    difficulty,
+    isGameStarted,
+    isLoadingStats,
+    isLoading,
     targetWord,
     hint,
     currentGuess,
     guesses,
     gameStatus,
-    setGameStatus,
     score,
     timeRemaining,
     isTimerRunning,
-    isLoading,
     letterStates,
+    gameHistory,
     stats,
+    // Actions
+    startGame,
+    loadSavedStats,
+    updateGameHistory,
+    setGameStatus,
     addLetter,
     deleteLetter,
     submitGuess,
-    resetGame,
-  } = useGame(difficulty);
+  } = useGameStore();
 
-  // Load saved stats when component mounts
+  // Load saved stats and theme when component mounts
   useEffect(() => {
-    loadSavedStats();
-  }, []);
-
-  const loadSavedStats = async () => {
-    try {
-      const savedStats = await storageService.loadGameStats();
-      setGameHistory(savedStats);
-    } catch (error) {
-      console.error('Error loading saved stats:', error);
-    } finally {
-      setIsLoadingStats(false);
-    }
-  };
-
-  // Update game history and save to storage
-  const updateGameHistory = async (status: 'won' | 'lost', finalScore: number) => {
-    const newHistory = {
-      ...gameHistory,
-      [difficulty]: {
-        gamesPlayed: gameHistory[difficulty].gamesPlayed + 1,
-        wins: status === 'won' ? gameHistory[difficulty].wins + 1 : gameHistory[difficulty].wins,
-        bestStreak: stats.currentStreak > gameHistory[difficulty].bestStreak
-          ? stats.currentStreak
-          : gameHistory[difficulty].bestStreak,
-        bestScore: status === 'won' && finalScore > gameHistory[difficulty].bestScore
-          ? finalScore
-          : gameHistory[difficulty].bestScore,
-      }
+    const initializeApp = async () => {
+      await Promise.all([
+        loadSavedStats(),
+        initializeTheme()
+      ]);
     };
-
-    setGameHistory(newHistory);
-    try {
-      await storageService.saveGameStats(newHistory);
-    } catch (error) {
-      console.error('Error saving game stats:', error);
-    }
-  };
+    initializeApp();
+  }, []);
 
   const handleKeyPress = (key: string) => {
     if (gameStatus !== 'playing') return;
@@ -93,81 +68,205 @@ export default function Index() {
     }
   };
 
-  const startNewGame = async (selectedDifficulty: Difficulty) => {
-    setDifficulty(selectedDifficulty);
-    setIsGameStarted(true);
-    await resetGame();
-  };
-
   if (isLoadingStats) {
     return (
-      <View style={[styles.container, styles.loadingContainer]}>
-        <ActivityIndicator size="large" color={COLORS.TEXT} />
-        <Text style={styles.loadingText}>Loading game stats...</Text>
-      </View>
+      <SafeAreaView style={[styles.container, styles.loadingContainer, { backgroundColor: theme.background }]}>
+        <StatusBar
+          barStyle={isDarkMode ? "light-content" : "dark-content"}
+          backgroundColor={theme.background}
+        />
+        <Text style={[styles.smallTitle, { color: theme.title }]}>Wordle</Text>
+        <ActivityIndicator size="large" color={theme.text} />
+        <Text style={[styles.loadingText, { color: theme.text }]}>Loading game stats...</Text>
+      </SafeAreaView>
     );
   }
 
   if (!isGameStarted) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Select Difficulty</Text>
-        <View style={styles.difficultyContainer}>
-          {(Object.keys(DIFFICULTY_SETTINGS) as Difficulty[]).map((level) => (
-            <TouchableOpacity
-              key={level}
-              style={styles.difficultyButton}
-              onPress={() => startNewGame(level)}
-            >
-              <View style={styles.difficultyContent}>
-                <View style={styles.difficultyHeader}>
-                  <Text style={styles.difficultyText}>
-                    {DIFFICULTY_SETTINGS[level].label}
-                    {'\n'}
-                    ({DIFFICULTY_SETTINGS[level].time / 60} minutes)
+    const DifficultyContent = () => (
+      <View style={[
+        styles.difficultyContainer,
+        isTablet && styles.difficultyContainerTablet,
+        isSmallScreen && styles.difficultyContainerSmall
+      ]}>
+        <View style={styles.headerRow}>
+          <Text style={[styles.smallTitle, { color: theme.title }]}>Wordle</Text>
+          <ThemeToggle />
+        </View>
+        {(Object.keys(DIFFICULTY_SETTINGS) as Difficulty[]).map((level) => (
+          <TouchableOpacity
+            key={level}
+            style={[
+              styles.difficultyButton,
+              {
+                borderColor: theme.border,
+                backgroundColor: theme.stats.background,
+              },
+              isTablet && styles.difficultyButtonTablet,
+              isSmallScreen && styles.difficultyButtonSmall
+            ]}
+            onPress={() => startGame(level)}
+          >
+            <View style={[
+              styles.difficultyContent,
+              isSmallScreen && styles.difficultyContentSmall
+            ]}>
+              <View style={[
+                styles.difficultyHeader,
+                {
+                  borderBottomColor: theme.border,
+                },
+                isSmallScreen && styles.difficultyHeaderSmall
+              ]}>
+                <Text style={[
+                  styles.difficultyText,
+                  {
+                    color: theme.text,
+                  },
+                  isTablet && styles.difficultyTextTablet,
+                  isSmallScreen && styles.difficultyTextSmall
+                ]}>
+                  {DIFFICULTY_SETTINGS[level].label}
+                  {'\n'}
+                  ({DIFFICULTY_SETTINGS[level].time / 60} {DIFFICULTY_SETTINGS[level].time === 60 ? 'minute' : 'minutes'})
+                </Text>
+              </View>
+              <View style={[
+                styles.statsContainer,
+                isTablet && styles.statsContainerTablet,
+                isSmallScreen && styles.statsContainerSmall
+              ]}>
+                <View style={[
+                  styles.statRow,
+                  {
+                    backgroundColor: theme.stats.background,
+                    borderColor: theme.stats.border,
+                  },
+                  isTablet && styles.statRowTablet,
+                  isSmallScreen && styles.statRowSmall
+                ]}>
+                  <Text style={[
+                    styles.statLabel,
+                    { color: theme.stats.text },
+                    isTablet && styles.statLabelTablet,
+                    isSmallScreen && styles.statLabelSmall
+                  ]}>Games:</Text>
+                  <Text style={[
+                    styles.statValue,
+                    { color: theme.stats.text },
+                    isTablet && styles.statValueTablet,
+                    isSmallScreen && styles.statValueSmall
+                  ]}>{gameHistory[level].gamesPlayed}</Text>
+                </View>
+                <View style={[
+                  styles.statRow,
+                  {
+                    backgroundColor: theme.stats.background,
+                    borderColor: theme.stats.border,
+                  },
+                  isTablet && styles.statRowTablet
+                ]}>
+                  <Text style={[
+                    styles.statLabel,
+                    { color: theme.stats.text },
+                    isTablet && styles.statLabelTablet
+                  ]}>Wins:</Text>
+                  <Text style={[
+                    styles.statValue,
+                    { color: theme.stats.text },
+                    isTablet && styles.statValueTablet
+                  ]}>
+                    {gameHistory[level].gamesPlayed > 0
+                      ? Math.round((gameHistory[level].wins / gameHistory[level].gamesPlayed) * 100)
+                      : 0}%
                   </Text>
                 </View>
-                <View style={styles.statsContainer}>
-                  <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Games:</Text>
-                    <Text style={styles.statValue}>{gameHistory[level].gamesPlayed}</Text>
-                  </View>
-                  <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Wins:</Text>
-                    <Text style={styles.statValue}>
-                      {gameHistory[level].gamesPlayed > 0
-                        ? Math.round((gameHistory[level].wins / gameHistory[level].gamesPlayed) * 100)
-                        : 0}%
-                    </Text>
-                  </View>
-                  <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Best Streak:</Text>
-                    <Text style={styles.statValue}>{gameHistory[level].bestStreak}</Text>
-                  </View>
-                  <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Best Score:</Text>
-                    <Text style={styles.statValue}>{gameHistory[level].bestScore}</Text>
-                  </View>
+                <View style={[
+                  styles.statRow,
+                  {
+                    backgroundColor: theme.stats.background,
+                    borderColor: theme.stats.border,
+                  },
+                  isTablet && styles.statRowTablet
+                ]}>
+                  <Text style={[
+                    styles.statLabel,
+                    { color: theme.stats.text },
+                    isTablet && styles.statLabelTablet
+                  ]}>Best Streak:</Text>
+                  <Text style={[
+                    styles.statValue,
+                    { color: theme.stats.text },
+                    isTablet && styles.statValueTablet
+                  ]}>{gameHistory[level].bestStreak}</Text>
+                </View>
+                <View style={[
+                  styles.statRow,
+                  {
+                    backgroundColor: theme.stats.background,
+                    borderColor: theme.stats.border,
+                  },
+                  isTablet && styles.statRowTablet
+                ]}>
+                  <Text style={[
+                    styles.statLabel,
+                    { color: theme.stats.text },
+                    isTablet && styles.statLabelTablet
+                  ]}>Best Score:</Text>
+                  <Text style={[
+                    styles.statValue,
+                    { color: theme.stats.text },
+                    isTablet && styles.statValueTablet
+                  ]}>{gameHistory[level].bestScore}</Text>
                 </View>
               </View>
-            </TouchableOpacity>
-          ))}
-        </View>
+            </View>
+          </TouchableOpacity>
+        ))}
       </View>
+    );
+
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+        <StatusBar
+          barStyle={isDarkMode ? "light-content" : "dark-content"}
+          backgroundColor={theme.background}
+        />
+        {isSmallScreen ? (
+          <ScrollView
+            contentContainerStyle={styles.scrollViewContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <DifficultyContent />
+          </ScrollView>
+        ) : (
+          <DifficultyContent />
+        )}
+      </SafeAreaView>
     );
   }
 
   if (isLoading) {
     return (
-      <View style={[styles.container, styles.loadingContainer]}>
-        <ActivityIndicator size="large" color={COLORS.TEXT} />
-        <Text style={styles.loadingText}>Loading new word...</Text>
-      </View>
+      <SafeAreaView style={[styles.container, styles.loadingContainer, { backgroundColor: theme.background }]}>
+        <StatusBar
+          barStyle={isDarkMode ? "light-content" : "dark-content"}
+          backgroundColor={theme.background}
+        />
+        <Text style={[styles.smallTitle, { color: theme.title }]}>Wordle</Text>
+        <ActivityIndicator size="large" color={theme.text} />
+        <Text style={[styles.loadingText, { color: theme.text }]}>Loading new word...</Text>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <StatusBar
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
+        backgroundColor={theme.background}
+      />
+      <Text style={[styles.smallTitle, { color: theme.title }]}>Wordle</Text>
       <GameStatus
         status={gameStatus}
         word={targetWord}
@@ -177,49 +276,76 @@ export default function Index() {
           if (gameStatus !== 'playing') {
             updateGameHistory(gameStatus, score || 0);
           }
-          setIsGameStarted(false);
+          // Reset game state and return to difficulty screen
+          setGameStatus('playing');
+          useGameStore.setState({ isGameStarted: false });
         }}
       />
       <View style={[
         styles.gameContent,
         gameStatus !== 'playing' && styles.blurred
       ]}>
-        <Timer
-          initialTime={DIFFICULTY_SETTINGS[difficulty].time}
-          timeRemaining={timeRemaining}
-          isRunning={isTimerRunning}
-          onTimeUp={() => {
-            if (gameStatus === 'playing') {
-              setGameStatus('lost');
-            }
-          }}
-        />
-        <Hint hint={hint} />
-        <GameBoard
-          targetWord={targetWord}
-          currentGuess={currentGuess}
-          guesses={guesses}
-        />
-        <Keyboard
-          onKeyPress={handleKeyPress}
-          disabled={gameStatus !== 'playing'}
-          letterStates={letterStates}
-        />
+        <View style={styles.gameTopContent}>
+          <Timer
+            initialTime={DIFFICULTY_SETTINGS[difficulty].time}
+            timeRemaining={timeRemaining}
+            isRunning={isTimerRunning}
+            onTimeUp={() => {
+              if (gameStatus === 'playing') {
+                setGameStatus('lost');
+              }
+            }}
+          />
+          <Hint hint={hint} />
+          <GameBoard
+            targetWord={targetWord}
+            currentGuess={currentGuess}
+            guesses={guesses}
+          />
+        </View>
+        <View style={styles.keyboardContainer}>
+          <Keyboard
+            onKeyPress={handleKeyPress}
+            disabled={gameStatus !== 'playing'}
+            letterStates={letterStates}
+          />
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.BACKGROUND,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 20,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
   },
   gameContent: {
     flex: 1,
-    alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 20,
+    paddingHorizontal: 10,
+  },
+  gameTopContent: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "flex-start",
+    paddingTop: 10,
+    gap: 15,
+  },
+  keyboardContainer: {
+    width: '100%',
+    alignItems: 'center',
+    paddingVertical: 10,
   },
   blurred: {
     opacity: 0.3,
@@ -230,64 +356,153 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   loadingText: {
-    color: COLORS.TEXT,
     fontSize: 18,
-  },
-  title: {
-    color: COLORS.TEXT,
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-    paddingTop: 30,
   },
   difficultyContainer: {
-    width: '85%',
+    width: '90%',
     gap: 12,
     alignSelf: 'center',
+    paddingHorizontal: 15,
+    paddingBottom: 20,
   },
   difficultyButton: {
-    backgroundColor: COLORS.KEYBOARD_BG,
-    padding: 12,
-    borderRadius: 8,
+    borderRadius: 15,
+    overflow: 'hidden',
+    borderWidth: 1,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    marginBottom: 8,
   },
   difficultyContent: {
-    width: '100%',
+    padding: 15,
   },
   difficultyHeader: {
-    marginBottom: 8,
+    marginBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
-    paddingBottom: 6,
+    paddingBottom: 8,
   },
   difficultyText: {
-    color: COLORS.TEXT,
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
     textAlign: 'center',
+    letterSpacing: 0.5,
+    lineHeight: 28,
   },
   statsContainer: {
-    width: '100%',
-    paddingHorizontal: 8,
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    paddingHorizontal: 8,
   },
   statRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
     width: '48%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 6,
+    padding: 8,
+    borderRadius: 8,
+    borderWidth: 1,
   },
   statLabel: {
-    color: COLORS.TEXT,
     fontSize: 14,
+    fontWeight: '500',
     opacity: 0.8,
-    marginRight: 5,
   },
   statValue: {
-    color: COLORS.TEXT,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
+  },
+  // Tablet-specific styles
+  difficultyContainerTablet: {
+    width: '70%',
+    maxWidth: 800,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 20,
+  },
+  difficultyButtonTablet: {
+    width: '45%',
+    minWidth: 300,
+  },
+  difficultyTextTablet: {
+    fontSize: 26,
+    lineHeight: 32,
+  },
+  statsContainerTablet: {
+    paddingHorizontal: 15,
+  },
+  statRowTablet: {
+    padding: 12,
+    marginVertical: 8,
+  },
+  statLabelTablet: {
+    fontSize: 16,
+  },
+  statValueTablet: {
+    fontSize: 18,
+  },
+  // Small screen specific styles
+  difficultyContainerSmall: {
+    width: '95%',
+    gap: 8,
+    paddingHorizontal: 10,
+    paddingBottom: 15,
+  },
+  difficultyButtonSmall: {
+    borderRadius: 12,
+    marginBottom: 6,
+  },
+  difficultyContentSmall: {
+    padding: 12,
+  },
+  difficultyHeaderSmall: {
+    marginBottom: 8,
+    paddingBottom: 6,
+  },
+  difficultyTextSmall: {
+    fontSize: 18,
+    lineHeight: 24,
+  },
+  statsContainerSmall: {
+    paddingHorizontal: 6,
+    gap: 4,
+  },
+  statRowSmall: {
+    padding: 6,
+    marginVertical: 3,
+    borderRadius: 6,
+    width: '47%',
+  },
+  statLabelSmall: {
+    fontSize: 12,
+  },
+  statValueSmall: {
+    fontSize: 14,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    paddingVertical: 10,
+    position: 'relative',
+  },
+  smallTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  themeToggleContainer: {
+    position: 'absolute',
+    right: 0,
   },
 });
