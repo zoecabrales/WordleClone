@@ -2,7 +2,15 @@
 
 A React Native mobile game inspired by the popular word-guessing game Wordle. Built with Expo and React Native, this app features multiple difficulty levels, a timer system, and persistent statistics tracking.
 
-![Wordle Clone Screenshot](assets/images/screenshot.png)
+## Screenshots
+
+<div align="center">
+  <div style="display: flex; justify-content: space-between;">
+    <img src="assets/images/difficultyScreen.png" alt="Difficulty Selection Screen" width="250"/>
+    <img src="assets/images/mainScreen.png" alt="Main Game Screen" width="250"/>
+    <img src="assets/images/winLossScreen.png" alt="Game Result Screen" width="250"/>
+  </div>
+</div>
 
 ## Features
 
@@ -12,7 +20,7 @@ A React Native mobile game inspired by the popular word-guessing game Wordle. Bu
 - 📊 Statistics tracking and persistence
 - 🎨 Interactive keyboard with color feedback
 - 🔄 Play again functionality
-- 📱 Cross-platform support (Android & iOS)
+- 📱 Cross-platform support (Android & iOS for future builds, currently avail only for Android)
 
 ## Live Demo
 
