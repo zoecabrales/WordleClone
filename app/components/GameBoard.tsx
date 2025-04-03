@@ -45,6 +45,11 @@ export const GameBoard = ({ targetWord, currentGuess, guesses }: GameBoardProps)
         return guesses[rowIndex]?.[colIndex];
     };
 
+    const isTileRevealing = (rowIndex: number, colIndex: number) => {
+        // Only reveal tiles in completed rows
+        return rowIndex < guesses.length;
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.grid}>
@@ -55,6 +60,7 @@ export const GameBoard = ({ targetWord, currentGuess, guesses }: GameBoardProps)
                                 key={`${rowIndex}-${colIndex}`}
                                 letter={getTileLetter(rowIndex, colIndex)}
                                 status={getTileStatus(rowIndex, colIndex)}
+                                isRevealing={isTileRevealing(rowIndex, colIndex)}
                             />
                         ))}
                     </View>

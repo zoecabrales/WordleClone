@@ -1,5 +1,6 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { COLORS } from '../constants/colors';
+import * as Haptics from 'expo-haptics';
 
 const KEYBOARD_ROWS = [
     ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
@@ -20,8 +21,23 @@ type KeyboardProps = {
 };
 
 export const Keyboard = ({ onKeyPress, disabled = false, letterStates }: KeyboardProps) => {
-    const handlePress = (key: string) => {
+    const handlePress = async (key: string) => {
         if (disabled) return;
+
+        // Trigger haptic feedback
+        try {
+            if (Platform.OS !== 'web') {
+                await Haptics.impactAsync(
+                    key === 'ENTER' || key === 'DELETE'
+                        ? Haptics.ImpactFeedbackStyle.Medium
+                        : Haptics.ImpactFeedbackStyle.Light
+                );
+            }
+        } catch (error) {
+            console.log('Haptics not supported');
+        }
+
+        // Call onKeyPress immediately after triggering haptics
         onKeyPress(key);
     };
 
@@ -66,6 +82,7 @@ export const Keyboard = ({ onKeyPress, disabled = false, letterStates }: Keyboar
                             onPress={() => handlePress(key)}
                             disabled={isKeyDisabled(key)}
                             activeOpacity={isKeyDisabled(key) ? 1 : 0.7}
+                            pressRetentionOffset={{ top: 10, left: 10, bottom: 10, right: 10 }}
                         >
                             <Text style={[
                                 styles.keyText,

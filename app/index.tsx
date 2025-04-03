@@ -7,11 +7,20 @@ import { Hint } from "./components/Hint";
 import { useGame } from "./hooks/useGame";
 import { COLORS } from "./constants/colors";
 import { Difficulty, DIFFICULTY_SETTINGS } from "./constants/gameSettings";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { storageService, GameStats } from "./services/storageService";
+
+const DEFAULT_STATS: GameStats = {
+  easy: { gamesPlayed: 0, wins: 0, bestStreak: 0, bestScore: 0 },
+  medium: { gamesPlayed: 0, wins: 0, bestStreak: 0, bestScore: 0 },
+  hard: { gamesPlayed: 0, wins: 0, bestStreak: 0, bestScore: 0 },
+};
 
 export default function Index() {
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [isGameStarted, setIsGameStarted] = useState(false);
+  const [gameHistory, setGameHistory] = useState<GameStats>(DEFAULT_STATS);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
 
   const {
     targetWord,
@@ -25,12 +34,52 @@ export default function Index() {
     isTimerRunning,
     isLoading,
     letterStates,
+    stats,
     addLetter,
     deleteLetter,
     submitGuess,
     resetGame,
-    stats,
   } = useGame(difficulty);
+
+  // Load saved stats when component mounts
+  useEffect(() => {
+    loadSavedStats();
+  }, []);
+
+  const loadSavedStats = async () => {
+    try {
+      const savedStats = await storageService.loadGameStats();
+      setGameHistory(savedStats);
+    } catch (error) {
+      console.error('Error loading saved stats:', error);
+    } finally {
+      setIsLoadingStats(false);
+    }
+  };
+
+  // Update game history and save to storage
+  const updateGameHistory = async (status: 'won' | 'lost', finalScore: number) => {
+    const newHistory = {
+      ...gameHistory,
+      [difficulty]: {
+        gamesPlayed: gameHistory[difficulty].gamesPlayed + 1,
+        wins: status === 'won' ? gameHistory[difficulty].wins + 1 : gameHistory[difficulty].wins,
+        bestStreak: stats.currentStreak > gameHistory[difficulty].bestStreak
+          ? stats.currentStreak
+          : gameHistory[difficulty].bestStreak,
+        bestScore: status === 'won' && finalScore > gameHistory[difficulty].bestScore
+          ? finalScore
+          : gameHistory[difficulty].bestScore,
+      }
+    };
+
+    setGameHistory(newHistory);
+    try {
+      await storageService.saveGameStats(newHistory);
+    } catch (error) {
+      console.error('Error saving game stats:', error);
+    }
+  };
 
   const handleKeyPress = (key: string) => {
     if (gameStatus !== 'playing') return;
@@ -50,6 +99,15 @@ export default function Index() {
     await resetGame();
   };
 
+  if (isLoadingStats) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color={COLORS.TEXT} />
+        <Text style={styles.loadingText}>Loading game stats...</Text>
+      </View>
+    );
+  }
+
   if (!isGameStarted) {
     return (
       <View style={styles.container}>
@@ -61,11 +119,37 @@ export default function Index() {
               style={styles.difficultyButton}
               onPress={() => startNewGame(level)}
             >
-              <Text style={styles.difficultyText}>
-                {DIFFICULTY_SETTINGS[level].label}
-                {'\n'}
-                ({DIFFICULTY_SETTINGS[level].time / 60} minutes)
-              </Text>
+              <View style={styles.difficultyContent}>
+                <View style={styles.difficultyHeader}>
+                  <Text style={styles.difficultyText}>
+                    {DIFFICULTY_SETTINGS[level].label}
+                    {'\n'}
+                    ({DIFFICULTY_SETTINGS[level].time / 60} minutes)
+                  </Text>
+                </View>
+                <View style={styles.statsContainer}>
+                  <View style={styles.statRow}>
+                    <Text style={styles.statLabel}>Games:</Text>
+                    <Text style={styles.statValue}>{gameHistory[level].gamesPlayed}</Text>
+                  </View>
+                  <View style={styles.statRow}>
+                    <Text style={styles.statLabel}>Wins:</Text>
+                    <Text style={styles.statValue}>
+                      {gameHistory[level].gamesPlayed > 0
+                        ? Math.round((gameHistory[level].wins / gameHistory[level].gamesPlayed) * 100)
+                        : 0}%
+                    </Text>
+                  </View>
+                  <View style={styles.statRow}>
+                    <Text style={styles.statLabel}>Best Streak:</Text>
+                    <Text style={styles.statValue}>{gameHistory[level].bestStreak}</Text>
+                  </View>
+                  <View style={styles.statRow}>
+                    <Text style={styles.statLabel}>Best Score:</Text>
+                    <Text style={styles.statValue}>{gameHistory[level].bestScore}</Text>
+                  </View>
+                </View>
+              </View>
             </TouchableOpacity>
           ))}
         </View>
@@ -89,7 +173,12 @@ export default function Index() {
         word={targetWord}
         score={score}
         stats={stats}
-        onPlayAgain={() => setIsGameStarted(false)}
+        onPlayAgain={() => {
+          if (gameStatus !== 'playing') {
+            updateGameHistory(gameStatus, score || 0);
+          }
+          setIsGameStarted(false);
+        }}
       />
       <View style={[
         styles.gameContent,
@@ -146,27 +235,59 @@ const styles = StyleSheet.create({
   },
   title: {
     color: COLORS.TEXT,
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 30,
+    marginBottom: 20,
     textAlign: 'center',
-    paddingTop: 40,
+    paddingTop: 30,
   },
   difficultyContainer: {
-    width: '80%',
-    gap: 20,
+    width: '85%',
+    gap: 12,
     alignSelf: 'center',
   },
   difficultyButton: {
     backgroundColor: COLORS.KEYBOARD_BG,
-    padding: 20,
-    borderRadius: 10,
-    alignItems: 'center',
+    padding: 12,
+    borderRadius: 8,
+  },
+  difficultyContent: {
+    width: '100%',
+  },
+  difficultyHeader: {
+    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    paddingBottom: 6,
   },
   difficultyText: {
     color: COLORS.TEXT,
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  statsContainer: {
+    width: '100%',
+    paddingHorizontal: 8,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  statRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    width: '48%',
+  },
+  statLabel: {
+    color: COLORS.TEXT,
+    fontSize: 14,
+    opacity: 0.8,
+    marginRight: 5,
+  },
+  statValue: {
+    color: COLORS.TEXT,
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 });
