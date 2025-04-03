@@ -1,19 +1,17 @@
 import { Stack } from "expo-router";
-import { COLORS } from './constants/colors';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function Layout() {
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: COLORS.BACKGROUND,
-        },
-        headerTintColor: COLORS.TEXT,
-        headerTitle: 'Wordle',
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
-      }}
-    />
+    <SafeAreaProvider>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: {
+            backgroundColor: 'transparent',
+          },
+        }}
+      />
+    </SafeAreaProvider>
   );
 }

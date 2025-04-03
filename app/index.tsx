@@ -1,4 +1,5 @@
-import { View, StyleSheet, Text, TouchableOpacity, ActivityIndicator, Dimensions, useWindowDimensions, ScrollView } from "react-native";
+import { View, StyleSheet, Text, TouchableOpacity, ActivityIndicator, Dimensions, useWindowDimensions, ScrollView, StatusBar } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { GameBoard } from "./components/GameBoard";
 import { Keyboard } from "./components/Keyboard";
 import { GameStatus } from "./components/GameStatus";
@@ -15,7 +16,7 @@ export default function Index() {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isTablet = windowWidth >= 768;
   const isSmallScreen = windowHeight < 700; // For devices like iPhone SE
-  const { theme, initializeTheme } = useThemeStore();
+  const { theme, isDarkMode, initializeTheme } = useThemeStore();
 
   // Get state from Zustand store
   const {
@@ -69,10 +70,14 @@ export default function Index() {
 
   if (isLoadingStats) {
     return (
-      <View style={[styles.container, styles.loadingContainer, { backgroundColor: theme.background }]}>
+      <SafeAreaView style={[styles.container, styles.loadingContainer, { backgroundColor: theme.background }]}>
+        <StatusBar
+          barStyle={isDarkMode ? "light-content" : "dark-content"}
+          backgroundColor={theme.background}
+        />
         <ActivityIndicator size="large" color={theme.text} />
         <Text style={[styles.loadingText, { color: theme.text }]}>Loading game stats...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -220,7 +225,11 @@ export default function Index() {
     );
 
     return (
-      <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+        <StatusBar
+          barStyle={isDarkMode ? "light-content" : "dark-content"}
+          backgroundColor={theme.background}
+        />
         {isSmallScreen ? (
           <ScrollView
             contentContainerStyle={styles.scrollViewContent}
@@ -231,21 +240,29 @@ export default function Index() {
         ) : (
           <DifficultyContent />
         )}
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (isLoading) {
     return (
-      <View style={[styles.container, styles.loadingContainer, { backgroundColor: theme.background }]}>
+      <SafeAreaView style={[styles.container, styles.loadingContainer, { backgroundColor: theme.background }]}>
+        <StatusBar
+          barStyle={isDarkMode ? "light-content" : "dark-content"}
+          backgroundColor={theme.background}
+        />
         <ActivityIndicator size="large" color={theme.text} />
         <Text style={[styles.loadingText, { color: theme.text }]}>Loading new word...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <StatusBar
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
+        backgroundColor={theme.background}
+      />
       <GameStatus
         status={gameStatus}
         word={targetWord}
@@ -290,7 +307,7 @@ export default function Index() {
           />
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
