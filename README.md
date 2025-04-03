@@ -20,7 +20,7 @@ A React Native mobile game inspired by the popular word-guessing game Wordle. Bu
 - 📊 Statistics tracking and persistence
 - 🎨 Interactive keyboard with color feedback
 - 🔄 Play again functionality
-- 📱 Cross-platform support (Android & iOS)
+- 📱 Cross-platform support (Android & iOS for future builds, currently avail only for Android)
 
 ## Live Demo
 
