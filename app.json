@@ -6,14 +6,26 @@
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#121213",
+      "resizeMode": "native"
+    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.wordmaster.app"
+      "bundleIdentifier": "com.wordmaster.app",
+      "splash": {
+        "backgroundColor": "#121213",
+        "resizeMode": "native"
+      }
     },
     "android": {
       "package": "com.wordmaster.app",
       "versionCode": 3,
-      "permissions": []
+      "permissions": [],
+      "splash": {
+        "backgroundColor": "#121213",
+        "resizeMode": "native"
+      }
     },
     "web": {
       "bundler": "metro",
