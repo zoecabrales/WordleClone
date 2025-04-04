@@ -36,7 +36,7 @@ export default function Layout() {
           setIsLoaded(true);
         }
       } catch (e) {
-        console.warn(e);
+        console.warn('[Layout] Failed to load saved theme:', e);
         if (mounted) {
           setIsLoaded(true);
         }

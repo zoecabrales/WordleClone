@@ -26,7 +26,8 @@ export const storageService = {
             const jsonValue = JSON.stringify(stats);
             await AsyncStorage.setItem(STORAGE_KEYS.GAME_STATS, jsonValue);
         } catch (error) {
-            console.error('Error saving game stats:', error);
+            console.error('[StorageService] Failed to save game stats:', error);
+            throw error;
         }
     },
 
@@ -43,8 +44,8 @@ export const storageService = {
             }
             return DEFAULT_STATS;
         } catch (error) {
-            console.error('Error loading game stats:', error);
-            return DEFAULT_STATS;
+            console.error('[StorageService] Failed to load game stats:', error);
+            throw error;
         }
     },
 
@@ -52,7 +53,8 @@ export const storageService = {
         try {
             await AsyncStorage.removeItem(STORAGE_KEYS.GAME_STATS);
         } catch (error) {
-            console.error('Error clearing game stats:', error);
+            console.error('[StorageService] Failed to clear game stats:', error);
+            throw error;
         }
     },
 }; 

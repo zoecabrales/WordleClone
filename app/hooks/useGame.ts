@@ -54,7 +54,8 @@ export const useGame = (difficulty: Difficulty = 'medium') => {
             setHint(wordData.hint);
             setIsTimerRunning(true);
         } catch (error) {
-            console.error('Error loading word:', error);
+            console.error('[useGame] Failed to load word:', error);
+            throw error;
         } finally {
             setIsLoading(false);
         }

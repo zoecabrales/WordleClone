@@ -47,8 +47,9 @@
         "origin": false
       },
       "eas": {
-        "projectId": "wordMaster"
+        "projectId": "9b5ec1b0-7468-4f6d-a6aa-401126f2f6a9"
       }
-    }
+    },
+    "owner": "jirehzoe"
   }
 }

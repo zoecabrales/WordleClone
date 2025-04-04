@@ -105,8 +105,8 @@ export const useGameStore = create<GameState>((set, get) => ({
                 isLoading: false,
             });
         } catch (error) {
-            console.error('Error loading word:', error);
-            set({ isLoading: false });
+            console.error('[GameStore] Failed to load word:', error);
+            throw error;
         }
     },
 
@@ -230,12 +230,8 @@ export const useGameStore = create<GameState>((set, get) => ({
             });
             return savedStats;
         } catch (error) {
-            console.error('Error loading saved stats:', error);
-            set({
-                gameHistory: DEFAULT_STATS,
-                isLoadingStats: false
-            });
-            return DEFAULT_STATS;
+            console.error('[GameStore] Failed to load saved stats:', error);
+            throw error;
         }
     },
 
@@ -255,7 +251,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         try {
             await storageService.saveGameStats(newHistory);
         } catch (error) {
-            console.error('Error saving game stats:', error);
+            console.error('[GameStore] Failed to save game stats:', error);
+            throw error;
         }
     },
 
