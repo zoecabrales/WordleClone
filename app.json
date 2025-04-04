@@ -1,18 +1,18 @@
 {
   "expo": {
-    "name": "Wordle Clone",
+    "name": "Word Master",
     "slug": "wordleClone",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.wordleclone.app"
+      "bundleIdentifier": "com.wordmaster.app"
     },
     "android": {
-      "package": "com.wordleclone.app",
-      "versionCode": 1,
+      "package": "com.wordmaster.app",
+      "versionCode": 3,
       "permissions": []
     },
     "web": {
@@ -30,7 +30,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "9b5ec1b0-7468-4f6d-a6aa-401126f2f6a9"
+        "projectId": "wordMaster"
       }
     }
   }
