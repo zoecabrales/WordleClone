@@ -21,7 +21,7 @@
     },
     "android": {
       "package": "com.wordmaster.app",
-      "versionCode": 3,
+      "versionCode": 4,
       "permissions": [],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
