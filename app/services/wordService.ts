@@ -19,87 +19,78 @@ const FALLBACK_WORDS: WordDefinition[] = [
     { word: 'JUICE', hint: 'Liquid extracted from fruits' }
 ];
 
-// Function to fetch a random word from the API
-const fetchRandomWordFromAPI = async (): Promise<string | null> => {
+// Updated API endpoints
+const RANDOM_WORD_API = 'https://random-word-api.vercel.app/api?length=5';
+const DICTIONARY_API = 'https://api.dictionaryapi.dev/api/v2/entries/en/';
+
+// Test function for Random Word API
+export const testRandomWordAPI = async () => {
     try {
-        // Try the primary API first
-        const response = await fetch('https://random-word-api.vercel.app/api?length=5');
-
+        const response = await fetch(RANDOM_WORD_API);
         if (!response.ok) {
-            // If primary API fails, try the backup API
-            const backupResponse = await fetch('https://random-word-form.herokuapp.com/random/word?length=5');
-            if (!backupResponse.ok) {
-                throw new Error(`Both APIs failed. Primary: ${response.status}, Backup: ${backupResponse.status}`);
-            }
-            const backupData = await backupResponse.json();
-            return backupData.word?.toUpperCase() || null;
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-
-        const data = await response.json();
-        // The API returns an array with one word
-        if (Array.isArray(data) && data.length > 0) {
-            return data[0].toUpperCase();
-        }
-        return null;
+        const rawResponse = await response.text();
+        console.log('Random Word API Raw Response:', rawResponse);
+        const data = JSON.parse(rawResponse);
+        console.log('Random Word API Parsed Response:', data);
+        return data;
     } catch (error) {
-        console.error('Error fetching random word:', error);
+        console.error('Random Word API Error:', error);
         return null;
     }
 };
 
-// Function to get word definition from Free Dictionary API
-const getWordDefinition = async (word: string): Promise<string | null> => {
+// Test function for Dictionary API
+export const testDictionaryAPI = async (word: string) => {
     try {
-        const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+        const response = await fetch(`${DICTIONARY_API}${word}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-
-        const data = await response.json();
-        if (Array.isArray(data) && data.length > 0 && data[0].meanings?.[0]?.definitions?.[0]) {
-            let hint = data[0].meanings[0].definitions[0].definition;
-            if (hint.length > 100) {
-                hint = hint.substring(0, 97) + '...';
-            }
-            return hint;
-        }
-        return null;
+        const rawResponse = await response.text();
+        console.log('Dictionary API Raw Response:', rawResponse);
+        const data = JSON.parse(rawResponse);
+        console.log('Dictionary API Parsed Response:', data);
+        return data;
     } catch (error) {
-        console.error('Error getting word definition:', error);
+        console.error('Dictionary API Error:', error);
         return null;
     }
 };
 
 export const fetchRandomWord = async (): Promise<WordDefinition> => {
     try {
-        // Try to get a random word from the API
-        const randomWord = await fetchRandomWordFromAPI();
-
-        if (randomWord) {
-            // Try to get a definition for the word
-            const hint = await getWordDefinition(randomWord);
-
-            if (hint) {
-                return {
-                    word: randomWord,
-                    hint: hint
-                };
-            }
-
-            // If we got a word but no definition, use a generic hint
-            return {
-                word: randomWord,
-                hint: `A 5-letter word starting with ${randomWord[0]}`
-            };
+        // First test the Random Word API
+        const randomWordData = await testRandomWordAPI();
+        if (!randomWordData || !Array.isArray(randomWordData) || randomWordData.length === 0) {
+            throw new Error('Failed to get random word');
         }
 
-        // If API fails, use a fallback word
-        const fallbackWord = FALLBACK_WORDS[Math.floor(Math.random() * FALLBACK_WORDS.length)];
-        return fallbackWord;
+        const word = randomWordData[0].toUpperCase();
 
+        // Then test the Dictionary API with the word
+        const dictionaryData = await testDictionaryAPI(word);
+
+        let hint = '';
+        if (dictionaryData && dictionaryData[0]?.meanings?.[0]?.definitions?.[0]?.definition) {
+            hint = dictionaryData[0].meanings[0].definitions[0].definition;
+        } else {
+            // Fallback hint if dictionary API fails
+            hint = 'A common five-letter word';
+        }
+
+        return { word, hint };
     } catch (error) {
-        console.error('Error in word service:', error);
-        // Return a random fallback word
-        return FALLBACK_WORDS[Math.floor(Math.random() * FALLBACK_WORDS.length)];
+        console.error('Error fetching word:', error);
+        // Fallback to a predefined list of words if both APIs fail
+        const fallbackWords: WordDefinition[] = [
+            { word: 'APPLE', hint: 'A common fruit' },
+            { word: 'BEACH', hint: 'Sandy shore by the ocean' },
+            { word: 'CLOUD', hint: 'White fluffy thing in the sky' },
+            { word: 'DREAM', hint: 'What you see when you sleep' },
+            { word: 'EARTH', hint: 'The planet we live on' }
+        ];
+        return fallbackWords[Math.floor(Math.random() * fallbackWords.length)];
     }
 }; 

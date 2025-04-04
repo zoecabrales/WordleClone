@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "icon": "./assets/icon.png",
     "splash": {
       "backgroundColor": "#121213",
       "resizeMode": "native"
@@ -22,6 +23,10 @@
       "package": "com.wordmaster.app",
       "versionCode": 3,
       "permissions": [],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#121213"
+      },
       "splash": {
         "backgroundColor": "#121213",
         "resizeMode": "native"
