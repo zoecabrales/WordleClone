@@ -20,6 +20,7 @@ A React Native mobile game inspired by the popular word-guessing game Wordle. Bu
 - 📊 Statistics tracking and persistence
 - 🎨 Interactive keyboard with color feedback
 - 🔄 Play again functionality
+- 🌓 Dark/Light theme support
 - 📱 Cross-platform support (Android & iOS for future builds, currently avail only for Android)
 
 ## Live Demo
@@ -67,12 +68,25 @@ Download the Android APK from our [latest release](https://github.com/zoecabrale
    - 🟩 Green: Letter is correct and in right position
    - 🟨 Yellow: Letter is in the word but wrong position
    - ⬜ Gray: Letter is not in the word
+4. Theme-specific colors:
+   - Light Theme:
+     - Empty tile: Light gray
+     - Correct letter: Green
+     - Present letter: Yellow
+     - Absent letter: Dark gray
+     - Keyboard: Light gray
+   - Dark Theme:
+     - Empty tile: Dark gray
+     - Correct letter: Green
+     - Present letter: Yellow
+     - Absent letter: Light gray
+     - Keyboard: Dark gray
 
 ## Difficulty Levels
 
-- **Easy**: 5 minutes, shorter words
-- **Medium**: 3 minutes, medium-length words
-- **Hard**: 1 minute, longer/complex words
+- **Easy**: 5 minutes, 5-letter words
+- **Medium**: 3 minutes, 5-letter words
+- **Hard**: 1 minute, 5-letter words
 
 ## Contributing
 
@@ -101,6 +115,18 @@ We welcome contributions! Here's how you can help:
 - AsyncStorage for data persistence
 - React Navigation
 - Expo Router
+- Zustand for state management
+- React Native Reanimated for animations
+
+## Performance Optimizations
+
+Recent improvements to the codebase include:
+
+- Memoization of key components and callbacks using `useMemo` and `useCallback`
+- Optimized state updates in the game store
+- Improved component re-rendering patterns
+- Default exports for better module organization
+- Optimized animations and transitions
 
 ## Project Structure
 
@@ -108,8 +134,21 @@ We welcome contributions! Here's how you can help:
 wordleClone/
 ├── app/                    # Main application code
 │   ├── components/         # Reusable components
+│   │   ├── GameBoard.tsx   # Game board component
+│   │   ├── GameStatus.tsx  # Game status display
+│   │   ├── Hint.tsx        # Word hint component
+│   │   ├── Keyboard.tsx    # Virtual keyboard
+│   │   ├── SplashScreen.tsx # App splash screen
+│   │   ├── ThemeToggle.tsx # Theme switcher
+│   │   ├── Tile.tsx        # Individual game tile
+│   │   └── Timer.tsx       # Game timer
 │   ├── constants/         # Constants and configurations
-│   ├── hooks/            # Custom React hooks
+│   │   ├── colors.ts      # Color definitions
+│   │   ├── gameSettings.ts # Game settings
+│   │   └── words.ts       # Word list
+│   ├── store/            # State management
+│   │   ├── gameStore.ts  # Game state
+│   │   └── themeStore.ts # Theme state
 │   └── services/         # API and other services
 ├── assets/               # Images and other static assets
 └── types/               # TypeScript type definitions
