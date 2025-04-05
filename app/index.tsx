@@ -8,7 +8,7 @@ import { Hint } from "./components/Hint";
 import { useGameStore } from "./store/gameStore";
 import { COLORS } from "./constants/colors";
 import { Difficulty, DIFFICULTY_SETTINGS } from "./constants/gameSettings";
-import { useEffect } from "react";
+import { useEffect, useCallback, useMemo } from "react";
 import { useThemeStore } from "./store/themeStore";
 import { ThemeToggle } from "./components/ThemeToggle";
 
@@ -56,7 +56,7 @@ export default function Index() {
     initializeApp();
   }, []);
 
-  const handleKeyPress = (key: string) => {
+  const handleKeyPress = useCallback((key: string) => {
     if (gameStatus !== 'playing') return;
 
     if (key === 'ENTER') {
@@ -66,7 +66,150 @@ export default function Index() {
     } else {
       addLetter(key);
     }
-  };
+  }, [gameStatus, submitGuess, deleteLetter, addLetter]);
+
+  const DifficultyContent = useMemo(() => () => (
+    <View style={[
+      styles.difficultyContainer,
+      isTablet && styles.difficultyContainerTablet,
+      isSmallScreen && styles.difficultyContainerSmall
+    ]}>
+      <View style={styles.headerRow}>
+        <Text style={[styles.smallTitle, { color: theme.title }]}>Wordle</Text>
+        <ThemeToggle />
+      </View>
+      {(Object.keys(DIFFICULTY_SETTINGS) as Difficulty[]).map((level) => (
+        <TouchableOpacity
+          key={level}
+          style={[
+            styles.difficultyButton,
+            {
+              borderColor: theme.border,
+              backgroundColor: theme.stats.background,
+            },
+            isTablet && styles.difficultyButtonTablet,
+            isSmallScreen && styles.difficultyButtonSmall
+          ]}
+          onPress={() => startGame(level)}
+        >
+          <View style={[
+            styles.difficultyContent,
+            isSmallScreen && styles.difficultyContentSmall
+          ]}>
+            <View style={[
+              styles.difficultyHeader,
+              {
+                borderBottomColor: theme.border,
+              },
+              isSmallScreen && styles.difficultyHeaderSmall
+            ]}>
+              <Text style={[
+                styles.difficultyText,
+                {
+                  color: theme.text,
+                },
+                isTablet && styles.difficultyTextTablet,
+                isSmallScreen && styles.difficultyTextSmall
+              ]}>
+                {DIFFICULTY_SETTINGS[level].label}
+                {'\n'}
+                ({DIFFICULTY_SETTINGS[level].time / 60} {DIFFICULTY_SETTINGS[level].time === 60 ? 'minute' : 'minutes'})
+              </Text>
+            </View>
+            <View style={[
+              styles.statsContainer,
+              isTablet && styles.statsContainerTablet,
+              isSmallScreen && styles.statsContainerSmall
+            ]}>
+              <View style={[
+                styles.statRow,
+                {
+                  backgroundColor: theme.stats.background,
+                  borderColor: theme.stats.border,
+                },
+                isTablet && styles.statRowTablet,
+                isSmallScreen && styles.statRowSmall
+              ]}>
+                <Text style={[
+                  styles.statLabel,
+                  { color: theme.stats.text },
+                  isTablet && styles.statLabelTablet,
+                  isSmallScreen && styles.statLabelSmall
+                ]}>Games:</Text>
+                <Text style={[
+                  styles.statValue,
+                  { color: theme.stats.text },
+                  isTablet && styles.statValueTablet,
+                  isSmallScreen && styles.statValueSmall
+                ]}>{gameHistory[level].gamesPlayed}</Text>
+              </View>
+              <View style={[
+                styles.statRow,
+                {
+                  backgroundColor: theme.stats.background,
+                  borderColor: theme.stats.border,
+                },
+                isTablet && styles.statRowTablet
+              ]}>
+                <Text style={[
+                  styles.statLabel,
+                  { color: theme.stats.text },
+                  isTablet && styles.statLabelTablet
+                ]}>Wins:</Text>
+                <Text style={[
+                  styles.statValue,
+                  { color: theme.stats.text },
+                  isTablet && styles.statValueTablet
+                ]}>
+                  {gameHistory[level].gamesPlayed > 0
+                    ? Math.round((gameHistory[level].wins / gameHistory[level].gamesPlayed) * 100)
+                    : 0}%
+                </Text>
+              </View>
+              <View style={[
+                styles.statRow,
+                {
+                  backgroundColor: theme.stats.background,
+                  borderColor: theme.stats.border,
+                },
+                isTablet && styles.statRowTablet
+              ]}>
+                <Text style={[
+                  styles.statLabel,
+                  { color: theme.stats.text },
+                  isTablet && styles.statLabelTablet
+                ]}>Best Streak:</Text>
+                <Text style={[
+                  styles.statValue,
+                  { color: theme.stats.text },
+                  isTablet && styles.statValueTablet
+                ]}>{gameHistory[level].bestStreak}</Text>
+              </View>
+              <View style={[
+                styles.statRow,
+                {
+                  backgroundColor: theme.stats.background,
+                  borderColor: theme.stats.border,
+                },
+                isTablet && styles.statRowTablet
+              ]}>
+                <Text style={[
+                  styles.statLabel,
+                  { color: theme.stats.text },
+                  isTablet && styles.statLabelTablet
+                ]}>Best Score:</Text>
+                <Text style={[
+                  styles.statValue,
+                  { color: theme.stats.text },
+                  isTablet && styles.statValueTablet
+                ]}>{gameHistory[level].bestScore}</Text>
+              </View>
+            </View>
+          </View>
+        </TouchableOpacity>
+      ))}
+    </View>
+  ), [isTablet, isSmallScreen, theme, gameHistory, startGame]);
 
   if (isLoadingStats) {
     return (
@@ -83,149 +226,6 @@ export default function Index() {
   }
 
   if (!isGameStarted) {
-    const DifficultyContent = () => (
-      <View style={[
-        styles.difficultyContainer,
-        isTablet && styles.difficultyContainerTablet,
-        isSmallScreen && styles.difficultyContainerSmall
-      ]}>
-        <View style={styles.headerRow}>
-          <Text style={[styles.smallTitle, { color: theme.title }]}>Wordle</Text>
-          <ThemeToggle />
-        </View>
-        {(Object.keys(DIFFICULTY_SETTINGS) as Difficulty[]).map((level) => (
-          <TouchableOpacity
-            key={level}
-            style={[
-              styles.difficultyButton,
-              {
-                borderColor: theme.border,
-                backgroundColor: theme.stats.background,
-              },
-              isTablet && styles.difficultyButtonTablet,
-              isSmallScreen && styles.difficultyButtonSmall
-            ]}
-            onPress={() => startGame(level)}
-          >
-            <View style={[
-              styles.difficultyContent,
-              isSmallScreen && styles.difficultyContentSmall
-            ]}>
-              <View style={[
-                styles.difficultyHeader,
-                {
-                  borderBottomColor: theme.border,
-                },
-                isSmallScreen && styles.difficultyHeaderSmall
-              ]}>
-                <Text style={[
-                  styles.difficultyText,
-                  {
-                    color: theme.text,
-                  },
-                  isTablet && styles.difficultyTextTablet,
-                  isSmallScreen && styles.difficultyTextSmall
-                ]}>
-                  {DIFFICULTY_SETTINGS[level].label}
-                  {'\n'}
-                  ({DIFFICULTY_SETTINGS[level].time / 60} {DIFFICULTY_SETTINGS[level].time === 60 ? 'minute' : 'minutes'})
-                </Text>
-              </View>
-              <View style={[
-                styles.statsContainer,
-                isTablet && styles.statsContainerTablet,
-                isSmallScreen && styles.statsContainerSmall
-              ]}>
-                <View style={[
-                  styles.statRow,
-                  {
-                    backgroundColor: theme.stats.background,
-                    borderColor: theme.stats.border,
-                  },
-                  isTablet && styles.statRowTablet,
-                  isSmallScreen && styles.statRowSmall
-                ]}>
-                  <Text style={[
-                    styles.statLabel,
-                    { color: theme.stats.text },
-                    isTablet && styles.statLabelTablet,
-                    isSmallScreen && styles.statLabelSmall
-                  ]}>Games:</Text>
-                  <Text style={[
-                    styles.statValue,
-                    { color: theme.stats.text },
-                    isTablet && styles.statValueTablet,
-                    isSmallScreen && styles.statValueSmall
-                  ]}>{gameHistory[level].gamesPlayed}</Text>
-                </View>
-                <View style={[
-                  styles.statRow,
-                  {
-                    backgroundColor: theme.stats.background,
-                    borderColor: theme.stats.border,
-                  },
-                  isTablet && styles.statRowTablet
-                ]}>
-                  <Text style={[
-                    styles.statLabel,
-                    { color: theme.stats.text },
-                    isTablet && styles.statLabelTablet
-                  ]}>Wins:</Text>
-                  <Text style={[
-                    styles.statValue,
-                    { color: theme.stats.text },
-                    isTablet && styles.statValueTablet
-                  ]}>
-                    {gameHistory[level].gamesPlayed > 0
-                      ? Math.round((gameHistory[level].wins / gameHistory[level].gamesPlayed) * 100)
-                      : 0}%
-                  </Text>
-                </View>
-                <View style={[
-                  styles.statRow,
-                  {
-                    backgroundColor: theme.stats.background,
-                    borderColor: theme.stats.border,
-                  },
-                  isTablet && styles.statRowTablet
-                ]}>
-                  <Text style={[
-                    styles.statLabel,
-                    { color: theme.stats.text },
-                    isTablet && styles.statLabelTablet
-                  ]}>Best Streak:</Text>
-                  <Text style={[
-                    styles.statValue,
-                    { color: theme.stats.text },
-                    isTablet && styles.statValueTablet
-                  ]}>{gameHistory[level].bestStreak}</Text>
-                </View>
-                <View style={[
-                  styles.statRow,
-                  {
-                    backgroundColor: theme.stats.background,
-                    borderColor: theme.stats.border,
-                  },
-                  isTablet && styles.statRowTablet
-                ]}>
-                  <Text style={[
-                    styles.statLabel,
-                    { color: theme.stats.text },
-                    isTablet && styles.statLabelTablet
-                  ]}>Best Score:</Text>
-                  <Text style={[
-                    styles.statValue,
-                    { color: theme.stats.text },
-                    isTablet && styles.statValueTablet
-                  ]}>{gameHistory[level].bestScore}</Text>
-                </View>
-              </View>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </View>
-    );
-
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
         <StatusBar
@@ -255,7 +255,7 @@ export default function Index() {
         />
         <Text style={[styles.smallTitle, { color: theme.title }]}>Wordle</Text>
         <ActivityIndicator size="large" color={theme.text} />
-        <Text style={[styles.loadingText, { color: theme.text }]}>Loading new word...</Text>
+        <Text style={[styles.loadingText, { color: theme.text }]}>Loading game...</Text>
       </SafeAreaView>
     );
   }

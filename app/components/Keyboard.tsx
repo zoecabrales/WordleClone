@@ -39,7 +39,7 @@ export const Keyboard = ({ onKeyPress, disabled = false, letterStates }: Keyboar
                 );
             }
         } catch (error) {
-            console.log('Haptics not supported');
+            // Haptics not supported, silently fail
         }
 
         // Call onKeyPress immediately after triggering haptics

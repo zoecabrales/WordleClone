@@ -81,7 +81,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
 
             // Save theme preference
             AsyncStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(newIsDarkMode))
-                .catch(error => console.error('Error saving theme preference:', error));
+                .catch(error => console.error('[ThemeStore] Failed to save theme preference:', error));
 
             return {
                 isDarkMode: newIsDarkMode,
@@ -101,7 +101,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
                 });
             }
         } catch (error) {
-            console.error('Error loading theme preference:', error);
+            console.error('[ThemeStore] Failed to load theme preference:', error);
         }
     }
 })); 

@@ -31,9 +31,7 @@ export const testRandomWordAPI = async () => {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const rawResponse = await response.text();
-        console.log('Random Word API Raw Response:', rawResponse);
         const data = JSON.parse(rawResponse);
-        console.log('Random Word API Parsed Response:', data);
         return data;
     } catch (error) {
         console.error('Random Word API Error:', error);
@@ -49,9 +47,7 @@ export const testDictionaryAPI = async (word: string) => {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const rawResponse = await response.text();
-        console.log('Dictionary API Raw Response:', rawResponse);
         const data = JSON.parse(rawResponse);
-        console.log('Dictionary API Parsed Response:', data);
         return data;
     } catch (error) {
         console.error('Dictionary API Error:', error);
@@ -82,15 +78,45 @@ export const fetchRandomWord = async (): Promise<WordDefinition> => {
 
         return { word, hint };
     } catch (error) {
-        console.error('Error fetching word:', error);
-        // Fallback to a predefined list of words if both APIs fail
-        const fallbackWords: WordDefinition[] = [
-            { word: 'APPLE', hint: 'A common fruit' },
-            { word: 'BEACH', hint: 'Sandy shore by the ocean' },
-            { word: 'CLOUD', hint: 'White fluffy thing in the sky' },
-            { word: 'DREAM', hint: 'What you see when you sleep' },
-            { word: 'EARTH', hint: 'The planet we live on' }
-        ];
-        return fallbackWords[Math.floor(Math.random() * fallbackWords.length)];
+        console.error('[WordService] Failed to fetch random word:', error);
+        throw error;
+    }
+};
+
+export const validateWord = async (word: string): Promise<boolean> => {
+    try {
+        const response = await fetch(`${DICTIONARY_API}${word}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const rawResponse = await response.text();
+        const data = JSON.parse(rawResponse);
+        return data.length > 0;
+    } catch (error) {
+        console.error('[WordService] Failed to validate word:', error);
+        throw error;
+    }
+};
+
+export const fetchWordDefinition = async (word: string): Promise<WordDefinition> => {
+    try {
+        const response = await fetch(`${DICTIONARY_API}${word}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const rawResponse = await response.text();
+        const data = JSON.parse(rawResponse);
+        if (data.length > 0) {
+            const wordDefinition = data[0].meanings[0].definitions[0];
+            return {
+                word: word,
+                hint: wordDefinition.definition
+            };
+        } else {
+            throw new Error('No definition found');
+        }
+    } catch (error) {
+        console.error('[WordService] Failed to fetch word:', error);
+        throw error;
     }
 }; 
