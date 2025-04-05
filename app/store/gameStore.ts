@@ -125,7 +125,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     },
 
     submitGuess: () => {
-        const { currentGuess, targetWord, guesses, difficulty, timeRemaining } = get();
+        const { currentGuess, targetWord, guesses, difficulty, timeRemaining, letterStates: currentLetterStates } = get();
         if (currentGuess.length !== 5) return;
 
         const newGuesses = [...guesses, currentGuess];
@@ -133,18 +133,23 @@ export const useGameStore = create<GameState>((set, get) => ({
 
         // Update letter states
         const updateLetterStates = () => {
-            const newStates = { ...get().letterStates };
             const targetLetters = targetWord.split('');
             const guessLetters = currentGuess.split('');
+            const newStates = { ...currentLetterStates };
+            let hasChanges = false;
 
             // First pass: Mark correct letters
             guessLetters.forEach((letter, index) => {
                 if (letter === targetLetters[index]) {
-                    newStates[letter] = {
-                        letter,
-                        status: 'correct',
-                        position: index,
-                    };
+                    const currentState = currentLetterStates[letter];
+                    if (!currentState || currentState.status !== 'correct' || currentState.position !== index) {
+                        newStates[letter] = {
+                            letter,
+                            status: 'correct',
+                            position: index,
+                        };
+                        hasChanges = true;
+                    }
                 }
             });
 
@@ -152,22 +157,25 @@ export const useGameStore = create<GameState>((set, get) => ({
             guessLetters.forEach((letter, index) => {
                 if (newStates[letter]?.position === index) return;
 
+                const currentState = currentLetterStates[letter];
                 if (targetLetters.includes(letter)) {
-                    if (!newStates[letter] || newStates[letter].status !== 'correct') {
+                    if (!currentState || currentState.status !== 'present') {
                         newStates[letter] = {
                             letter,
                             status: 'present',
                         };
+                        hasChanges = true;
                     }
-                } else {
+                } else if (!currentState || currentState.status !== 'absent') {
                     newStates[letter] = {
                         letter,
                         status: 'absent',
                     };
+                    hasChanges = true;
                 }
             });
 
-            return newStates;
+            return hasChanges ? newStates : currentLetterStates;
         };
 
         const calculateScore = () => {
@@ -177,8 +185,10 @@ export const useGameStore = create<GameState>((set, get) => ({
             return settings.baseScore + timeBonus + attemptsBonus;
         };
 
-        const letterStates = updateLetterStates();
-        set({ letterStates });
+        const newLetterStates = updateLetterStates();
+        if (newLetterStates !== currentLetterStates) {
+            set({ letterStates: newLetterStates });
+        }
 
         if (currentGuess === targetWord) {
             const calculatedScore = calculateScore();

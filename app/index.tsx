@@ -8,7 +8,7 @@ import { Hint } from "./components/Hint";
 import { useGameStore } from "./store/gameStore";
 import { COLORS } from "./constants/colors";
 import { Difficulty, DIFFICULTY_SETTINGS } from "./constants/gameSettings";
-import { useEffect } from "react";
+import { useEffect, useCallback, useMemo } from "react";
 import { useThemeStore } from "./store/themeStore";
 import { ThemeToggle } from "./components/ThemeToggle";
 
@@ -56,7 +56,7 @@ export default function Index() {
     initializeApp();
   }, []);
 
-  const handleKeyPress = (key: string) => {
+  const handleKeyPress = useCallback((key: string) => {
     if (gameStatus !== 'playing') return;
 
     if (key === 'ENTER') {
@@ -66,7 +66,7 @@ export default function Index() {
     } else {
       addLetter(key);
     }
-  };
+  }, [gameStatus, submitGuess, deleteLetter, addLetter]);
 
   if (isLoadingStats) {
     return (
@@ -83,7 +83,7 @@ export default function Index() {
   }
 
   if (!isGameStarted) {
-    const DifficultyContent = () => (
+    const DifficultyContent = useMemo(() => () => (
       <View style={[
         styles.difficultyContainer,
         isTablet && styles.difficultyContainerTablet,
@@ -224,7 +224,7 @@ export default function Index() {
           </TouchableOpacity>
         ))}
       </View>
-    );
+    ), [isTablet, isSmallScreen, theme, gameHistory, startGame]);
 
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
