@@ -6,9 +6,20 @@ import { useGameStore } from './store/gameStore';
 import { useThemeStore } from './store/themeStore';
 import { SplashScreen as CustomSplashScreen } from './components/SplashScreen';
 import { View } from 'react-native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    },
+  },
+});
 
 export default function Layout() {
   const [isReady, setIsReady] = useState(false);
@@ -67,19 +78,21 @@ export default function Layout() {
   }
 
   return (
-    <SafeAreaProvider>
-      <View style={{ flex: 1, backgroundColor: theme.background }}>
-        {showStack && (
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: {
-                backgroundColor: 'transparent',
-              },
-            }}
-          />
-        )}
-      </View>
-    </SafeAreaProvider>
+    <QueryClientProvider client={queryClient}>
+      <SafeAreaProvider>
+        <View style={{ flex: 1, backgroundColor: theme.background }}>
+          {showStack && (
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: {
+                  backgroundColor: 'transparent',
+                },
+              }}
+            />
+          )}
+        </View>
+      </SafeAreaProvider>
+    </QueryClientProvider>
   );
 }

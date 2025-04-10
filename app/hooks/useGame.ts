@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { fetchRandomWord } from '../services/wordService';
 import { Difficulty, DIFFICULTY_SETTINGS, SCORE_MULTIPLIERS } from '../constants/gameSettings';
+import { useWordQuery } from './useWordQuery';
 
 type GameStatus = 'playing' | 'won' | 'lost';
 type LetterState = {
@@ -18,6 +18,7 @@ type GameStats = {
 };
 
 export const useGame = (difficulty: Difficulty = 'medium') => {
+    const { data: wordData, isLoading, refetch: refetchWord } = useWordQuery();
     const [targetWord, setTargetWord] = useState<string>('');
     const [hint, setHint] = useState<string>('');
     const [currentGuess, setCurrentGuess] = useState('');
@@ -26,7 +27,6 @@ export const useGame = (difficulty: Difficulty = 'medium') => {
     const [score, setScore] = useState(0);
     const [timeRemaining, setTimeRemaining] = useState(() => DIFFICULTY_SETTINGS[difficulty].time);
     const [isTimerRunning, setIsTimerRunning] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
     const [letterStates, setLetterStates] = useState<Record<string, LetterState>>({});
     const [stats, setStats] = useState<GameStats>({
         totalGames: 0,
@@ -41,25 +41,14 @@ export const useGame = (difficulty: Difficulty = 'medium') => {
         setTimeRemaining(DIFFICULTY_SETTINGS[difficulty].time);
     }, [difficulty]);
 
-    // Fetch initial word
+    // Update target word and hint when word data changes
     useEffect(() => {
-        loadNewWord();
-    }, []);
-
-    const loadNewWord = async () => {
-        setIsLoading(true);
-        try {
-            const wordData = await fetchRandomWord();
+        if (wordData) {
             setTargetWord(wordData.word);
             setHint(wordData.hint);
             setIsTimerRunning(true);
-        } catch (error) {
-            console.error('[useGame] Failed to load word:', error);
-            throw error;
-        } finally {
-            setIsLoading(false);
         }
-    };
+    }, [wordData]);
 
     // Timer logic
     useEffect(() => {
@@ -182,10 +171,11 @@ export const useGame = (difficulty: Difficulty = 'medium') => {
         setCurrentGuess('');
         setGuesses([]);
         setGameStatus('playing');
-        setTimeRemaining(DIFFICULTY_SETTINGS[difficulty].time);
         setScore(0);
+        setTimeRemaining(DIFFICULTY_SETTINGS[difficulty].time);
         setLetterStates({});
-        await loadNewWord();
+        setIsTimerRunning(false);
+        await refetchWord();
     };
 
     return {
@@ -194,7 +184,6 @@ export const useGame = (difficulty: Difficulty = 'medium') => {
         currentGuess,
         guesses,
         gameStatus,
-        setGameStatus,
         score,
         timeRemaining,
         isTimerRunning,
@@ -205,5 +194,6 @@ export const useGame = (difficulty: Difficulty = 'medium') => {
         deleteLetter,
         submitGuess,
         resetGame,
+        calculateScore,
     };
 }; 
